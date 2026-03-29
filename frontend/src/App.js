@@ -9,6 +9,12 @@ import AdminHome from "./Screens/Admin/Home";
 import ForgetPassword from "./Screens/ForgetPassword";
 import UpdatePassword from "./Screens/UpdatePassword";
 import Signup from "./pages/Signup";
+import Layout from "./publicScreens/Layout"
+import DepartmentPage from "./publicScreens/pages/DepartmentPage";
+import AcademicSection from "./publicScreens/pages/AcademicSection";
+import FacultySection from "./publicScreens/pages/FacultySection";
+import FacultyDetail from "./publicScreens/pages/FacultyDetail";
+import ResearchPage from "./publicScreens/pages/ResearchPage";
 
 const App = () => {
   return (
@@ -16,7 +22,16 @@ const App = () => {
       <Provider store={mystore}>
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* public routes */}
+            <Route path="/" element={<Layout />}>
+              <Route index element={<DepartmentPage />} />
+              <Route path="faculty" element={<FacultySection />} />
+              <Route path="research" element={<ResearchPage />} />
+              <Route path="academic" element={<AcademicSection />} />
+            </Route>
+            <Route path="faculty-details" element={<FacultyDetail />} />
+            
+            {/* protected routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgetPassword />} />
