@@ -24,19 +24,6 @@ const AcademicSection = () => {
       title: "Ph.D.",
       desc: "The Ph.D. programme focuses on original research leading to publications in top conferences.",
       bg: "bg-blue-100"
-    },
-    {
-      id: 5,
-      title: "M.S.",
-      desc: "M.S. by Research is designed for students aiming for R&D careers or Ph.D.",
-      bg: "bg-blue-100"
-    },
-    
-    {
-      id: 6,
-      title: "ePGD",
-      desc: "ePGD provides postgraduate-level technical education for working professionals.",
-      bg: "bg-gray-100"
     }
   ];
 

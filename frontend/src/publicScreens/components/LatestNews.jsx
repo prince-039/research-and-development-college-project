@@ -8,21 +8,25 @@ const staticNews = [
     id: "static-1",
     title: "Research paper published in IEEE Conference",
     date: "March 2026",
+    link: ""
   },
   {
     id: "static-2",
     title: "AI Lab inaugurated in CSE Department",
     date: "February 2026",
+    link: ""
   },
   {
     id: "static-3",
     title: "Students secured top rank in Hackathon",
     date: "January 2026",
+    link: ""
   },
   {
     id: "static-4",
     title: "New Blockchain course introduced",
     date: "December 2025",
+    link: ""
   },
 ];
 
@@ -49,6 +53,7 @@ const LatestNews = () => {
     const dynamicNews = notices.map((notice) => ({
       id: notice._id,
       title: notice.title,
+      link : notice.link,
       date: new Date(notice.createdAt).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -56,7 +61,7 @@ const LatestNews = () => {
       }),
     }));
 
-    return [...dynamicNews, ...staticNews].slice(0, 6);
+    return [...dynamicNews, ...staticNews].slice(0, 5);
   }, [notices]);
 
   return (
@@ -67,12 +72,13 @@ const LatestNews = () => {
           <div
             key={item.id}
             className="cursor-pointer p-3 transition hover:rounded-md hover:shadow-md hover:text-blue-300"
-            onClick={() => navigate("/news")}
           >
-            <p className="text-sm font-medium text-orange-500 hover:text-blue-400">
+            <a href={item.link} target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-orange-500 hover:text-blue-400">
               <Milestone className="mx-2 inline-block" />
               {item.title}
-            </p>
+            </a>
 
             <p className="ml-8 mt-1 text-xs text-gray-500">{item.date}</p>
           </div>

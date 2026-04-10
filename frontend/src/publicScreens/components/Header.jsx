@@ -19,10 +19,10 @@ const Header = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 md:flex-nowrap">
             <span
               className="cursor-pointer text-2xl font-medium text-gray-800 hover:text-blue-300"
-              onClick={() => navigate("/academic")}
+              onClick={() => navigate("/researchers")}
             >
               <GraduationCap className="mx-2 inline-block text-black" size={30} />
-              Academic
+              Researchers
             </span>
             <span
               className="cursor-pointer text-2xl font-medium text-gray-800 hover:text-blue-300"
@@ -32,10 +32,10 @@ const Header = () => {
               Faculty
             </span>
             <span
-              className="cursor-pointer text-2xl font-medium text-gray-800 hover:text-blue-300"
+              className="cursor-pointer text-xl font-medium text-gray-800 hover:text-blue-300"
               onClick={() => navigate("/login")}
             >
-              <LogIn className="mx-2 inline-block text-black" size={30} />
+              <LogIn className="mx-2 inline-block text-black" size={20} />
               Login
             </span>
           </div>
@@ -50,12 +50,12 @@ const Header = () => {
               Home
             </NavLink>
             <NavLink
-              to="/research"
+              to="/academic"
               className={({ isActive }) =>
                 `${isActive ? "bg-bule-400" : " "} space-x-4 px-1 hover:text-blue-500`
               }
             >
-              Research
+              Academic
             </NavLink>
             <NavLink
               to="/news"

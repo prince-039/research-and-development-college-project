@@ -16,6 +16,8 @@ import FacultySection from "./publicScreens/pages/FacultySection";
 import FacultyDetail from "./publicScreens/pages/FacultyDetail";
 import ResearchPage from "./publicScreens/pages/ResearchPage";
 import NewsPage from "./publicScreens/pages/NewsPage";
+import EventPage from "./publicScreens/pages/EventPage";
+import ResearcherDetails from "./publicScreens/pages/ResearcherDetails";
 
 const App = () => {
   return (
@@ -27,11 +29,14 @@ const App = () => {
             <Route path="/" element={<Layout />}>
               <Route index element={<DepartmentPage />} />
               <Route path="faculty" element={<FacultySection />} />
-              <Route path="research" element={<ResearchPage />} />
-              <Route path="news" element={<NewsPage />} />
               <Route path="academic" element={<AcademicSection />} />
+              <Route path="researchers" element={<ResearchPage />} />
+              <Route path="news" element={<NewsPage />} />
+              <Route path="events" element={<EventPage />} />
+
             </Route>
-            <Route path="faculty-details" element={<FacultyDetail />} />
+            <Route path="faculty-details/:id" element={<FacultyDetail />} />
+            <Route path="researcher-details/:type/:id" element={<ResearcherDetails />} />
             
             {/* protected routes */}
             <Route path="/login" element={<Login />} />

@@ -6,10 +6,12 @@ const {
   addResearchController,
   updateResearchController,
   deleteResearchController,
+  myResearchController,
 } = require("../controllers/research.controller");
 
 router.get("/", getResearchController);
 router.post("/", auth, addResearchController);
+router.get("/:id", myResearchController);
 router.put("/:id", auth, updateResearchController);
 router.delete("/:id", auth, deleteResearchController);
 

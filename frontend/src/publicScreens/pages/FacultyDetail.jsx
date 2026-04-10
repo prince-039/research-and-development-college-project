@@ -1,14 +1,16 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axiosWrapper from "../../utils/AxiosWrapper";
 
 const FacultyDetail = () => {
-  const faculty = {
-    name: "Dr. Deepak B. Phatak",
+  const facultyStatic = {
+    firstName: "Dr. Deepak B. Phatak",
     designation: "Professor",
     department: "Department of CSE, NIT Jamshedpur",
-    email: "dbp@iitb.ac.in",
+    email: "dbp@nitjsr.ac.in",
     phone: "+91-22-25767747",
     office: "Kanwal Rekhi Building",
-    website: "www.cse.iitb.ac.in/~dbp",
+    website: "www.cse.nitjsr.ac.in/~dbp",
     img: "https://randomuser.me/api/portraits/men/10.jpg",
     bio: `Born on 2nd April 1948, Professor Phatak obtained his Bachelor's degree in Electrical Engineering...
     
@@ -17,12 +19,30 @@ He has guided several PhD and MTech students and authored multiple research pape
 He has contributed to national-level projects and innovation initiatives in India.`
   };
   const navigate=useNavigate();
+  const [faculty, setFaculty]=useState(null);
+  const {id, type}=useParams()
 
+  useEffect(() => {
+    const loadBio = async () => {
+      try {
+        const response = await axiosWrapper.get(type ? `/research/${id}` : `/faculty/my-bio/${id}`);
+        console.log(response.data)
+        if (response.data.success) {
+          setFaculty(response.data.data);
+        }
+      } catch (error) {
+        setFaculty([]);
+      }
+    };
+
+    loadBio();
+  }, []);
+console.log(faculty)
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-orange-300 py-6 text-center">
         <h1 className="text-4xl font-bold tracking-widest text-white">
-          {faculty.name}
+          {faculty?.firstName +" " + faculty?.lastName}
         </h1>
       </div>
 
@@ -37,29 +57,29 @@ He has contributed to national-level projects and innovation initiatives in Indi
       <div className="max-w-5xl mx-auto mt-6 bg-white shadow p-6">
         <div className="flex flex-col md:flex-row gap-6 bg-orange-500 p-6 rounded">
           <img
-            src={faculty.img}
-            alt={faculty.name}
+            src={`http://localhost:8080/media/${faculty?.profile}` || `https://api.dicebear.com/7.x/avataaars/svg?seed=${faculty?.firstName}`}
+            alt={faculty?.firstName}
             className="w-40 h-40 object-cover rounded"
           />
           <div className="text-white">
             <h2 className="text-2xl font-bold">
-              {faculty.name}
+              {faculty?.firstName +" " + faculty?.lastName}
             </h2>
 
-            <p className="mt-2">{faculty.designation}</p>
-            <p>{faculty.department}</p>
+            <p className="mt-2">{faculty?.designation}</p>
+            <p>{faculty?.department}</p>
 
             <div className="mt-3 text-sm space-y-1">
-              <p>📞 {faculty.phone}</p>
-              <p>📧 {faculty.email}</p>
-              <p>🏢 {faculty.office}</p>
+              <p>📞 {faculty?.phone}</p>
+              <p>📧 {faculty?.email}</p>
+              <p>🏢 {faculty?.office}</p>
               <p>
                 🌐{" "}
                 <a
-                  href={`https://${faculty.website}`}
+                  href={`https://${faculty?.website}`}
                   className="underline"
                 >
-                  {faculty.website}
+                  {faculty?.website}
                 </a>
               </p>
             </div>
@@ -70,11 +90,11 @@ He has contributed to national-level projects and innovation initiatives in Indi
       {/* Bio Section */}
       <div className="max-w-5xl mx-auto mt-6 bg-white shadow p-6">
         <h2 className="text-xl font-semibold mb-4 tracking-wide">
-          {faculty.name}
+          {faculty?.firstName +" " + faculty?.lastName}
         </h2>
 
         <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-          {faculty.bio}
+          {faculty?.bio}
         </p>
       </div>
 
