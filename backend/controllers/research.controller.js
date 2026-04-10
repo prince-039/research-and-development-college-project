@@ -70,6 +70,26 @@ const addResearchController = async (req, res) => {
   }
 };
 
+const myResearchController = async (req, res) => {
+  try {
+    const {id}=req.params;
+
+    if (!id) {
+      return ApiResponse.error("Bad Request", 401).send(res);
+    }
+
+    const data = await Research.findById(id);
+
+    if (!data) {
+      return ApiResponse.error("No Research Data Found", 404).send(res);
+    }
+
+    return ApiResponse.success(data, "Research Data Loaded!").send(res);
+  } catch (error) {
+    return ApiResponse.error(error.message).send(res);
+  }
+};
+
 const updateResearchController = async (req, res) => {
   try {
     const updateData = {
@@ -123,6 +143,7 @@ const deleteResearchController = async (req, res) => {
 module.exports = {
   getResearchController,
   addResearchController,
+  myResearchController,
   updateResearchController,
   deleteResearchController,
 };

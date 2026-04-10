@@ -4,41 +4,6 @@ import { useNavigate } from "react-router-dom";
 import axiosWrapper from "../../utils/AxiosWrapper";
 import { baseApiURL } from "../../baseUrl";
 
-const staticFaculty = [
-  {
-    id: 1,
-    name: "Deepak B. Phatak",
-    designation: "Faculty Emeritus",
-    email: "dbp",
-    phone: "7747",
-    office: "KR314, Kanwal Rekhi Building",
-    research:
-      "Database Management Systems, Software Engineering, Distributed Systems",
-    img: "https://randomuser.me/api/portraits/men/1.jpg",
-  },
-  {
-    id: 2,
-    name: "Bharat G Adsul",
-    designation: "Assistant Professor",
-    email: "adsul",
-    phone: "7712",
-    office: "CC317, Computing Complex",
-    research:
-      "Formal methods in Concurrency, Logics and Games, Geometric Complexity",
-    img: "https://randomuser.me/api/portraits/men/2.jpg",
-  },
-  {
-    id: 3,
-    name: "Arpit Agarwal",
-    designation: "Assosiat Professor",
-    email: "aarpit",
-    phone: "7906",
-    office: "KR222, Kanwal Rekhi Building",
-    research: "Machine Learning, Human-AI Interaction, Responsible AI",
-    img: "https://randomuser.me/api/portraits/men/3.jpg",
-  },
-];
-
 const FacultySection = () => {
   const [search, setSearch] = useState("");
   const [dynamicFaculty, setDynamicFaculty] = useState([]);
@@ -75,7 +40,7 @@ const FacultySection = () => {
       img: item.profile ? `${mediaBaseUrl}/media/${item.profile}` : "",
     }));
 
-    return [...mappedDynamicFaculty, ...staticFaculty];
+    return [...mappedDynamicFaculty];
   }, [dynamicFaculty, mediaBaseUrl]);
 
   const filteredFaculty = faculty.filter((item) =>
@@ -113,7 +78,7 @@ const FacultySection = () => {
             <div>
               <h2
                 className="cursor-pointer pb-1 text-xl font-semibold text-blue-700 transition hover:underline"
-                onClick={() => navigate("/faculty-details")}
+                onClick={() => navigate(`/faculty-details/${facultyItem.id}`)}
               >
                 {facultyItem.name}
               </h2>

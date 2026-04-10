@@ -10,6 +10,7 @@ const {
   sendFacultyResetPasswordEmail,
   updateFacultyPasswordHandler,
   updateLoggedInPasswordController,
+  getMyBioDetailsController,
 } = require("../../controllers/details/faculty-details.controller");
 const upload = require("../../middlewares/multer.middleware");
 const auth = require("../../middlewares/auth.middleware");
@@ -18,6 +19,7 @@ router.post("/register", upload.single("file"), registerFacultyController);
 router.post("/login", loginFacultyController);
 router.get("/public", getAllFacultyController);
 router.get("/my-details", auth, getMyFacultyDetailsController);
+router.get("/my-bio/:id",  getMyBioDetailsController);
 
 router.get("/", auth, getAllFacultyController);
 router.patch("/:id", auth, upload.single("file"), updateFacultyController);

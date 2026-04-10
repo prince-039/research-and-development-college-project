@@ -207,6 +207,24 @@ const getMyFacultyDetailsController = async (req, res) => {
     return ApiResponse.internalServerError().send(res);
   }
 };
+const getMyBioDetailsController = async (req, res) => {
+  try {
+    const {id}=req.params
+    if (!id) 
+      return ApiResponse.notFound("Invalide request.").send(res);
+
+    const user = await facultyDetails
+      .findById(id)
+      .select("-__v -password");
+    if (!user) {
+      return ApiResponse.notFound("User not found").send(res);
+    }
+    return ApiResponse.success(user, "My Details Found!").send(res);
+  } catch (error) {
+    console.error("My Details Error: ", error);
+    return ApiResponse.internalServerError().send(res);
+  }
+};
 
 const sendFacultyResetPasswordEmail = async (req, res) => {
   try {
@@ -335,6 +353,7 @@ module.exports = {
   deleteFacultyController,
   getAllFacultyController,
   getMyFacultyDetailsController,
+  getMyBioDetailsController,
   sendFacultyResetPasswordEmail,
   updateFacultyPasswordHandler,
   updateLoggedInPasswordController,
