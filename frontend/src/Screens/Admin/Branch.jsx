@@ -138,24 +138,25 @@ const Branch = () => {
 
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10 relative">
-      <Heading title="Branch Details" />
-      <CustomButton
-        onClick={() => {
-          setShowAddForm(!showAddForm);
-          if (!showAddForm) {
-            setData({ name: "", branchId: "" });
-            setIsEditing(false);
-            setSelectedBranchId(null);
-          }
-        }}
-        className="fixed bottom-8 right-8 !rounded-full !p-4"
-      >
-        {showAddForm ? (
-          <IoMdClose className="text-3xl" />
-        ) : (
-          <IoMdAdd className="text-3xl" />
-        )}
-      </CustomButton>
+      <div className="flex justify-between items-center w-full">
+        <Heading title="Branch Details" />
+        <CustomButton
+          onClick={() => {
+            setShowAddForm(!showAddForm);
+            if (!showAddForm) {
+              setData({ name: "", branchId: "" });
+              setIsEditing(false);
+              setSelectedBranchId(null);
+            }
+          }}
+        >
+          {showAddForm ? (
+            <IoMdClose className="text-2xl" />
+          ) : (
+            <IoMdAdd className="text-2xl" />
+          )}
+        </CustomButton>
+      </div>
 
       {dataLoading && <Loading />}
 

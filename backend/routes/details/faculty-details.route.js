@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   loginFacultyController,
   registerFacultyController,
+  bulkUploadFacultyController,
   updateFacultyController,
   deleteFacultyController,
   getAllFacultyController,
@@ -16,6 +17,7 @@ const upload = require("../../middlewares/multer.middleware");
 const auth = require("../../middlewares/auth.middleware");
 
 router.post("/register", upload.single("file"), registerFacultyController);
+router.post("/bulk-upload", auth, upload.single("file"), bulkUploadFacultyController);
 router.post("/login", loginFacultyController);
 router.get("/public", getAllFacultyController);
 router.get("/my-details", auth, getMyFacultyDetailsController);

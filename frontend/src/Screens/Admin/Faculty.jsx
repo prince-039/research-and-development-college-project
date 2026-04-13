@@ -7,6 +7,7 @@ import Heading from "../../components/Heading";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import CustomButton from "../../components/CustomButton";
 import Loading from "../../components/Loading";
+import BulkUploadModal from "../../components/BulkUploadModal";
 
 const Faculty = () => {
   const [data, setData] = useState({
@@ -45,6 +46,7 @@ const Faculty = () => {
   const userToken = localStorage.getItem("userToken");
   const [file, setFile] = useState(null);
   const [dataLoading, setDataLoading] = useState(null);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
 
   useEffect(() => {
     getFacultyHandler();
@@ -267,21 +269,75 @@ const Faculty = () => {
     });
   };
 
+  const handleBulkUpload = async (csvFile) => {
+    try {
+      toast.loading("Uploading faculty...");
+      const payload = new FormData();
+      payload.append("file", csvFile);
+
+      const response = await axiosWrapper.post(`/faculty/bulk-upload`, payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      toast.dismiss();
+
+      if (!response.data.success) {
+        toast.error(response.data.message || "Bulk upload failed");
+        return;
+      }
+
+      const { insertedCount, failedCount, errors } = response.data.data;
+
+      if (insertedCount > 0) {
+        toast.success(
+          `${insertedCount} faculty record${insertedCount > 1 ? "s" : ""} uploaded`
+        );
+      }
+
+      if (failedCount > 0) {
+        const previewErrors = errors
+          .slice(0, 3)
+          .map((error) => `Row ${error.row}: ${error.message}`)
+          .join(" | ");
+
+        toast.error(
+          `${failedCount} row${failedCount > 1 ? "s" : ""} failed${previewErrors ? `: ${previewErrors}` : ""}`
+        );
+      }
+
+      getFacultyHandler();
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.message || "Bulk upload failed");
+    }
+  };
+
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10 relative">
       <div className="flex justify-between items-center w-full">
         <Heading title="Faculty Management" />
-        <CustomButton
-          onClick={() => {
-            if (showAddForm) {
-              resetForm();
-            } else {
-              setShowAddForm(true);
-            }
-          }}
-        >
-          <IoMdAdd className="text-2xl" />
-        </CustomButton>
+        <div className="flex items-center gap-3">
+          <CustomButton
+            variant="secondary"
+            onClick={() => setShowBulkUploadModal(true)}
+          >
+            Bulk Upload
+          </CustomButton>
+          <CustomButton
+            onClick={() => {
+              if (showAddForm) {
+                resetForm();
+              } else {
+                setShowAddForm(true);
+              }
+            }}
+          >
+            <IoMdAdd className="text-2xl" />
+          </CustomButton>
+        </div>
       </div>
 
       {dataLoading && <Loading />}
@@ -707,6 +763,35 @@ const Faculty = () => {
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}
         message="Are you sure you want to delete this faculty?"
+      />
+      <BulkUploadModal
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        title="Bulk Upload Faculty"
+        uploadLabel="Upload Faculty"
+        columns={[
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "gender",
+          "dob",
+          "designation",
+          "joiningDate",
+          "salary",
+          "branch",
+          "address",
+          "city",
+          "state",
+          "pincode",
+          "country",
+          "bloodGroup",
+          "status",
+          "emergencyContactName",
+          "emergencyContactRelationship",
+          "emergencyContactPhone",
+        ]}
+        onUpload={handleBulkUpload}
       />
     </div>
   );

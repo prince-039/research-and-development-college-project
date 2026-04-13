@@ -13,6 +13,7 @@ import axiosWrapper from "../../utils/AxiosWrapper";
 import Profile from "./Profile";
 import Exam from "../Exam";
 import Research from "./Research";
+import ResearchDetail from "./ResearchDetail";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const MENU_ITEMS = [
@@ -69,6 +70,10 @@ const Home = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const pathMenuId = urlParams.get("page") || "home";
+    if (pathMenuId === "research-detail") {
+      setSelectedMenu("research");
+      return;
+    }
     const validMenu = MENU_ITEMS.find((item) => item.id === pathMenuId);
     setSelectedMenu(validMenu ? validMenu.id : "home");
   }, [location.pathname, location.search]);
@@ -101,6 +106,11 @@ const Home = () => {
 
     if (selectedMenu === "home" && profileData) {
       return <Profile profileData={profileData} />;
+    }
+
+    const urlParams = new URLSearchParams(location.search);
+    if (selectedMenu === "research" && urlParams.get("page") === "research-detail") {
+      return <ResearchDetail />;
     }
 
     return MenuItem && <MenuItem />;

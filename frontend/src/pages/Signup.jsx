@@ -28,6 +28,7 @@ const studentInitialFormData = {
   firstName: "",
   middleName: "",
   lastName: "",
+  enrollmentNo: "",
   email: "",
   phone: "",
   password: "",
@@ -349,6 +350,14 @@ export default function Signup() {
                 required
                 value={studentFormData.lastName}
                 onChange={(e) => updateStudentField("lastName", e.target.value)}
+              />
+              <InputField
+                placeholder="Enrollment number"
+                required
+                value={studentFormData.enrollmentNo}
+                onChange={(e) =>
+                  updateStudentField("enrollmentNo", e.target.value)
+                }
               />
               <InputField
                 type="email"

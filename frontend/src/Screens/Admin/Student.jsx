@@ -8,6 +8,7 @@ import axiosWrapper from "../../utils/AxiosWrapper";
 import CustomButton from "../../components/CustomButton";
 import NoData from "../../components/NoData";
 import { CgDanger } from "react-icons/cg";
+import BulkUploadModal from "../../components/BulkUploadModal";
 
 const Student = () => {
   const [searchParams, setSearchParams] = useState({
@@ -25,6 +26,7 @@ const Student = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [file, setFile] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const userToken = localStorage.getItem("userToken");
 
   const [formData, setFormData] = useState({
@@ -305,14 +307,68 @@ const Student = () => {
     setFile(null);
   };
 
+  const handleBulkUpload = async (csvFile) => {
+    try {
+      toast.loading("Uploading students...");
+      const payload = new FormData();
+      payload.append("file", csvFile);
+
+      const response = await axiosWrapper.post(`/student/bulk-upload`, payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      toast.dismiss();
+
+      if (!response.data.success) {
+        toast.error(response.data.message || "Bulk upload failed");
+        return;
+      }
+
+      const { insertedCount, failedCount, errors } = response.data.data;
+      setStudents([]);
+      setHasSearched(false);
+
+      if (insertedCount > 0) {
+        toast.success(
+          `${insertedCount} student${insertedCount > 1 ? "s" : ""} uploaded`
+        );
+      }
+
+      if (failedCount > 0) {
+        const previewErrors = errors
+          .slice(0, 3)
+          .map((error) => `Row ${error.row}: ${error.message}`)
+          .join(" | ");
+
+        toast.error(
+          `${failedCount} row${failedCount > 1 ? "s" : ""} failed${previewErrors ? `: ${previewErrors}` : ""}`
+        );
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.message || "Bulk upload failed");
+    }
+  };
+
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
       <div className="flex justify-between items-center w-full">
         <Heading title="Student Management" />
         {branches.length > 0 && (
-          <CustomButton onClick={() => setShowAddForm(true)}>
-            <IoMdAdd className="text-2xl" />
-          </CustomButton>
+          <div className="flex items-center gap-3">
+            <CustomButton
+              variant="secondary"
+              onClick={() => setShowBulkUploadModal(true)}
+            >
+              Bulk Upload
+            </CustomButton>
+            <CustomButton onClick={() => setShowAddForm(true)}>
+              <IoMdAdd className="text-2xl" />
+            </CustomButton>
+          </div>
         )}
       </div>
 
@@ -851,6 +907,35 @@ const Student = () => {
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}
         message="Are you sure you want to delete this student?"
+      />
+      <BulkUploadModal
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        title="Bulk Upload Students"
+        uploadLabel="Upload Students"
+        columns={[
+          "firstName",
+          "middleName",
+          "lastName",
+          "email",
+          "phone",
+          "enrollmentNo",
+          "semester",
+          "branch",
+          "gender",
+          "dob",
+          "address",
+          "city",
+          "state",
+          "pincode",
+          "country",
+          "bloodGroup",
+          "status",
+          "emergencyContactName",
+          "emergencyContactRelationship",
+          "emergencyContactPhone",
+        ]}
+        onUpload={handleBulkUpload}
       />
     </div>
   );

@@ -6,8 +6,42 @@ const ApiResponse = require("../../utils/ApiResponse");
 const jwt = require("jsonwebtoken");
 const sendResetMail = require("../../utils/SendMail");
 const mongoose = require("mongoose");
+const fs = require("fs/promises");
+const { parseCsvFile } = require("../../utils/csv.utils");
 
 const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
+const resolveBranch = async (branchValue) => {
+  const trimmedBranchValue = String(branchValue || "").trim();
+
+  if (!trimmedBranchValue) {
+    return null;
+  }
+
+  if (mongoose.Types.ObjectId.isValid(trimmedBranchValue)) {
+    const branchById = await Branch.findById(trimmedBranchValue);
+    if (branchById) {
+      return branchById;
+    }
+  }
+
+  const branchRegex = new RegExp(`^${trimmedBranchValue}$`, "i");
+  return Branch.findOne({
+    $or: [{ name: branchRegex }, { branchId: branchRegex }],
+  });
+};
+
+const generateUniqueEnrollmentNo = async () => {
+  let enrollmentNo;
+  let exists = true;
+
+  while (exists) {
+    enrollmentNo = String(Math.floor(100000 + Math.random() * 900000));
+    exists = await studentDetails.exists({ enrollmentNo });
+  }
+
+  return enrollmentNo;
+};
 
 const loginStudentController = async (req, res) => {
   try {
@@ -83,6 +117,183 @@ const registerStudentController = async (req, res) => {
   }
 };
 
+const bulkUploadStudentsController = async (req, res) => {
+  try {
+    if (!req.file) {
+      return ApiResponse.badRequest("CSV file is required").send(res);
+    }
+
+    const rows = await parseCsvFile(req.file.path);
+    await fs.unlink(req.file.path).catch(() => {});
+
+    if (rows.length === 0) {
+      return ApiResponse.badRequest(
+        "CSV file must contain at least one student row"
+      ).send(res);
+    }
+
+    const inserted = [];
+    const errors = [];
+    const seenEmails = new Set();
+    const seenPhones = new Set();
+    const seenEnrollmentNumbers = new Set();
+
+    for (const row of rows) {
+      try {
+        const firstName = String(row.firstname || "").trim();
+        const middleName = String(row.middlename || "").trim();
+        const lastName = String(row.lastname || "").trim();
+        const phone = String(row.phone || "").trim();
+        const semester = Number(row.semester || 0);
+        const branchInput = row.branchid || row.branch || row.branchname;
+        const gender = String(row.gender || "").trim().toLowerCase();
+        const dob = String(row.dob || "").trim();
+        const address = String(row.address || "").trim();
+        const city = String(row.city || "").trim();
+        const state = String(row.state || "").trim();
+        const pincode = String(row.pincode || "").trim();
+        const country = String(row.country || "").trim();
+        const bloodGroup = String(row.bloodgroup || "").trim();
+        const status = String(row.status || "active").trim().toLowerCase();
+        const emergencyContact = {
+          name: String(row.emergencycontactname || "").trim(),
+          relationship: String(
+            row.emergencycontactrelationship || ""
+          ).trim(),
+          phone: String(row.emergencycontactphone || "").trim(),
+        };
+
+        if (
+          !firstName ||
+          !lastName ||
+          !phone ||
+          !semester ||
+          !branchInput ||
+          !gender ||
+          !dob ||
+          !address ||
+          !city ||
+          !state ||
+          !pincode ||
+          !country
+        ) {
+          throw new Error(
+            "Missing required fields. Required: firstName, lastName, phone, semester, branch, gender, dob, address, city, state, pincode, country"
+          );
+        }
+
+        if (!/^\d{10}$/.test(phone)) {
+          throw new Error("Phone number must be exactly 10 digits");
+        }
+
+        if (!["male", "female", "other"].includes(gender)) {
+          throw new Error("Gender must be male, female, or other");
+        }
+
+        if (!["active", "inactive"].includes(status)) {
+          throw new Error("Status must be active or inactive");
+        }
+
+        const branch = await resolveBranch(branchInput);
+        if (!branch) {
+          throw new Error(`Branch not found for "${branchInput}"`);
+        }
+
+        let enrollmentNo = String(row.enrollmentno || "").trim();
+        if (!enrollmentNo) {
+          enrollmentNo = await generateUniqueEnrollmentNo();
+        }
+
+        const email =
+          String(row.email || "").trim() || `${enrollmentNo}@nitjsr.ac.in`;
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error("Invalid email format");
+        }
+
+        if (seenEmails.has(email.toLowerCase())) {
+          throw new Error("Duplicate email in uploaded file");
+        }
+
+        if (seenPhones.has(phone)) {
+          throw new Error("Duplicate phone number in uploaded file");
+        }
+
+        if (seenEnrollmentNumbers.has(enrollmentNo)) {
+          throw new Error("Duplicate enrollment number in uploaded file");
+        }
+
+        const existingStudent = await studentDetails.findOne({
+          $or: [{ email }, { phone }, { enrollmentNo }],
+        });
+
+        if (existingStudent) {
+          throw new Error(
+            "Student with the same email, phone, or enrollment number already exists"
+          );
+        }
+
+        const createdStudent = await studentDetails.create({
+          enrollmentNo,
+          firstName,
+          middleName: middleName || "-",
+          lastName,
+          email,
+          phone,
+          semester,
+          branchId: branch._id,
+          gender,
+          dob,
+          address,
+          city,
+          state,
+          pincode,
+          country,
+          profile: "",
+          status,
+          bloodGroup: bloodGroup || undefined,
+          emergencyContact,
+          password: "student123",
+        });
+
+        inserted.push({
+          _id: createdStudent._id,
+          enrollmentNo: createdStudent.enrollmentNo,
+          email: createdStudent.email,
+        });
+        seenEmails.add(email.toLowerCase());
+        seenPhones.add(phone);
+        seenEnrollmentNumbers.add(enrollmentNo);
+      } catch (rowError) {
+        errors.push({
+          row: row.__rowNumber,
+          message: rowError.message || "Invalid row",
+        });
+      }
+    }
+
+    return ApiResponse.success(
+      {
+        insertedCount: inserted.length,
+        failedCount: errors.length,
+        inserted,
+        errors,
+      },
+      inserted.length > 0
+        ? "Student bulk upload processed"
+        : "No students were uploaded"
+    ).send(res);
+  } catch (error) {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+    console.error("Bulk Upload Students Error: ", error);
+    return ApiResponse.internalServerError(
+      error.message || "Student bulk upload failed"
+    ).send(res);
+  }
+};
+
 const signupStudentController = async (req, res) => {
   try {
     if (!isDatabaseConnected()) {
@@ -92,12 +303,13 @@ const signupStudentController = async (req, res) => {
       ).send(res);
     }
 
-    const {
-      firstName,
-      middleName,
-      lastName,
-      email,
-      phone,
+      const {
+        firstName,
+        middleName,
+        lastName,
+        enrollmentNo,
+        email,
+        phone,
       semester,
       branchId,
       gender,
@@ -108,14 +320,16 @@ const signupStudentController = async (req, res) => {
       pincode,
       country,
       password,
-    } = req.body;
-    const normalizedMiddleName = String(middleName || "").trim();
-    const normalizedSemester = Number(semester);
+      } = req.body;
+      const normalizedMiddleName = String(middleName || "").trim();
+      const normalizedEnrollmentNo = String(enrollmentNo || "").trim();
+      const normalizedSemester = Number(semester);
 
     if (
-      !firstName ||
-      !lastName ||
-      !email ||
+        !firstName ||
+        !lastName ||
+        !enrollmentNo ||
+        !email ||
       !phone ||
       !semester ||
       !branchId ||
@@ -137,9 +351,13 @@ const signupStudentController = async (req, res) => {
       return ApiResponse.badRequest("Invalid email format").send(res);
     }
 
-    if (!/^\d{10}$/.test(phone)) {
-      return ApiResponse.badRequest("Phone number must be 10 digits").send(res);
-    }
+      if (!/^\d{10}$/.test(phone)) {
+        return ApiResponse.badRequest("Phone number must be 10 digits").send(res);
+      }
+
+      if (!normalizedEnrollmentNo) {
+        return ApiResponse.badRequest("Enrollment number is required").send(res);
+      }
 
     if (password.length < 8) {
       return ApiResponse.badRequest(
@@ -189,29 +407,22 @@ const signupStudentController = async (req, res) => {
       );
     }
 
-    const existingStudent = await studentDetails.findOne({
-      $or: [{ email }, { phone }],
-    });
+      const existingStudent = await studentDetails.findOne({
+        $or: [{ email }, { phone }, { enrollmentNo: normalizedEnrollmentNo }],
+      });
 
-    if (existingStudent) {
-      return ApiResponse.conflict(
-        "Student with this email or phone already exists"
-      ).send(res);
-    }
-
-    let enrollmentNo;
-    let enrollmentExists = true;
-
-    while (enrollmentExists) {
-      enrollmentNo = Math.floor(100000 + Math.random() * 900000);
-      enrollmentExists = await studentDetails.exists({ enrollmentNo });
-    }
-
-    const user = await studentDetails.create({
-      firstName,
-      middleName: normalizedMiddleName || "-",
-      lastName,
-      email,
+      if (existingStudent) {
+        return ApiResponse.conflict(
+          "Student with this email, phone, or enrollment number already exists"
+        ).send(res);
+      }
+  
+      const user = await studentDetails.create({
+        firstName,
+        middleName: normalizedMiddleName || "-",
+        lastName,
+        enrollmentNo: normalizedEnrollmentNo,
+        email,
       phone,
       semester: normalizedSemester,
       branchId: resolvedBranch._id,
@@ -219,13 +430,12 @@ const signupStudentController = async (req, res) => {
       dob,
       address,
       city,
-      state,
-      pincode,
-      country,
-      password,
-      enrollmentNo,
-      profile: "",
-      status: "active",
+        state,
+        pincode,
+        country,
+        password,
+        profile: "",
+        status: "active",
     });
 
     const sanitizedUser = await studentDetails
@@ -557,6 +767,7 @@ module.exports = {
   loginStudentController,
   getAllDetailsController,
   registerStudentController,
+  bulkUploadStudentsController,
   signupStudentController,
   updateDetailsController,
   deleteDetailsController,

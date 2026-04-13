@@ -1,9 +1,13 @@
 const facultyDetails = require("../../models/details/faculty-details.model");
+const Branch = require("../../models/branch.model");
 const resetToken = require("../../models/reset-password.model");
 const bcrypt = require("bcryptjs");
 const ApiResponse = require("../../utils/ApiResponse");
 const jwt = require("jsonwebtoken");
 const sendResetMail = require("../../utils/SendMail");
+const mongoose = require("mongoose");
+const fs = require("fs/promises");
+const { parseCsvFile } = require("../../utils/csv.utils");
 
 const loginFacultyController = async (req, res) => {
   try {
@@ -48,6 +52,38 @@ const getAllFacultyController = async (req, res) => {
 
 const generateEmployeeId = () => {
   return Math.floor(100000 + Math.random() * 900000);
+};
+
+const resolveBranch = async (branchValue) => {
+  const trimmedBranchValue = String(branchValue || "").trim();
+
+  if (!trimmedBranchValue) {
+    return null;
+  }
+
+  if (mongoose.Types.ObjectId.isValid(trimmedBranchValue)) {
+    const branchById = await Branch.findById(trimmedBranchValue);
+    if (branchById) {
+      return branchById;
+    }
+  }
+
+  const branchRegex = new RegExp(`^${trimmedBranchValue}$`, "i");
+  return Branch.findOne({
+    $or: [{ name: branchRegex }, { branchId: branchRegex }],
+  });
+};
+
+const generateUniqueEmployeeId = async () => {
+  let employeeId;
+  let exists = true;
+
+  while (exists) {
+    employeeId = generateEmployeeId();
+    exists = await facultyDetails.exists({ employeeId });
+  }
+
+  return employeeId;
 };
 
 const registerFacultyController = async (req, res) => {
@@ -101,6 +137,174 @@ const registerFacultyController = async (req, res) => {
   } catch (error) {
     console.error("Register Error: ", error);
     return ApiResponse.internalServerError().send(res);
+  }
+};
+
+const bulkUploadFacultyController = async (req, res) => {
+  try {
+    if (!req.file) {
+      return ApiResponse.badRequest("CSV file is required").send(res);
+    }
+
+    const rows = await parseCsvFile(req.file.path);
+    await fs.unlink(req.file.path).catch(() => {});
+
+    if (rows.length === 0) {
+      return ApiResponse.badRequest(
+        "CSV file must contain at least one faculty row"
+      ).send(res);
+    }
+
+    const inserted = [];
+    const errors = [];
+    const seenEmails = new Set();
+    const seenPhones = new Set();
+
+    for (const row of rows) {
+      try {
+        const firstName = String(row.firstname || "").trim();
+        const lastName = String(row.lastname || "").trim();
+        const email = String(row.email || "").trim();
+        const phone = String(row.phone || "").trim();
+        const gender = String(row.gender || "").trim().toLowerCase();
+        const dob = String(row.dob || "").trim();
+        const designation = String(row.designation || "").trim();
+        const joiningDate = String(row.joiningdate || "").trim();
+        const salary = Number(row.salary || 0);
+        const branchInput = row.branchid || row.branch || row.branchname;
+        const address = String(row.address || "").trim();
+        const city = String(row.city || "").trim();
+        const state = String(row.state || "").trim();
+        const pincode = String(row.pincode || "").trim();
+        const country = String(row.country || "").trim();
+        const bloodGroup = String(row.bloodgroup || "").trim();
+        const status = String(row.status || "active").trim().toLowerCase();
+        const emergencyContact = {
+          name: String(row.emergencycontactname || "").trim(),
+          relationship: String(
+            row.emergencycontactrelationship || ""
+          ).trim(),
+          phone: String(row.emergencycontactphone || "").trim(),
+        };
+
+        if (
+          !firstName ||
+          !lastName ||
+          !email ||
+          !phone ||
+          !gender ||
+          !dob ||
+          !designation ||
+          !joiningDate ||
+          !salary ||
+          !branchInput ||
+          !address ||
+          !city ||
+          !state ||
+          !pincode ||
+          !country
+        ) {
+          throw new Error(
+            "Missing required fields. Required: firstName, lastName, email, phone, gender, dob, designation, joiningDate, salary, branch, address, city, state, pincode, country"
+          );
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error("Invalid email format");
+        }
+
+        if (!/^\d{10}$/.test(phone)) {
+          throw new Error("Phone number must be exactly 10 digits");
+        }
+
+        if (!["male", "female", "other"].includes(gender)) {
+          throw new Error("Gender must be male, female, or other");
+        }
+
+        if (!["active", "inactive"].includes(status)) {
+          throw new Error("Status must be active or inactive");
+        }
+
+        const branch = await resolveBranch(branchInput);
+        if (!branch) {
+          throw new Error(`Branch not found for "${branchInput}"`);
+        }
+
+        if (seenEmails.has(email.toLowerCase())) {
+          throw new Error("Duplicate email in uploaded file");
+        }
+
+        if (seenPhones.has(phone)) {
+          throw new Error("Duplicate phone number in uploaded file");
+        }
+
+        const existingFaculty = await facultyDetails.findOne({
+          $or: [{ email }, { phone }],
+        });
+        if (existingFaculty) {
+          throw new Error(
+            "Faculty with the same email or phone number already exists"
+          );
+        }
+
+        const createdFaculty = await facultyDetails.create({
+          employeeId: await generateUniqueEmployeeId(),
+          firstName,
+          lastName,
+          email,
+          phone,
+          profile: "",
+          address,
+          city,
+          state,
+          pincode,
+          country,
+          gender,
+          dob,
+          designation,
+          joiningDate,
+          salary,
+          status,
+          emergencyContact,
+          bloodGroup: bloodGroup || undefined,
+          branchId: branch._id,
+          password: "faculty123",
+        });
+
+        inserted.push({
+          _id: createdFaculty._id,
+          employeeId: createdFaculty.employeeId,
+          email: createdFaculty.email,
+        });
+        seenEmails.add(email.toLowerCase());
+        seenPhones.add(phone);
+      } catch (rowError) {
+        errors.push({
+          row: row.__rowNumber,
+          message: rowError.message || "Invalid row",
+        });
+      }
+    }
+
+    return ApiResponse.success(
+      {
+        insertedCount: inserted.length,
+        failedCount: errors.length,
+        inserted,
+        errors,
+      },
+      inserted.length > 0
+        ? "Faculty bulk upload processed"
+        : "No faculty records were uploaded"
+    ).send(res);
+  } catch (error) {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+    console.error("Bulk Upload Faculty Error: ", error);
+    return ApiResponse.internalServerError(
+      error.message || "Faculty bulk upload failed"
+    ).send(res);
   }
 };
 
@@ -349,6 +553,7 @@ const updateLoggedInPasswordController = async (req, res) => {
 module.exports = {
   loginFacultyController,
   registerFacultyController,
+  bulkUploadFacultyController,
   updateFacultyController,
   deleteFacultyController,
   getAllFacultyController,

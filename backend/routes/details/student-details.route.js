@@ -4,6 +4,7 @@ const {
   loginStudentController,
   getAllDetailsController,
   registerStudentController,
+  bulkUploadStudentsController,
   signupStudentController,
   updateDetailsController,
   deleteDetailsController,
@@ -18,6 +19,7 @@ const auth = require("../../middlewares/auth.middleware");
 
 router.post("/signup", signupStudentController);
 router.post("/register", upload.single("file"), registerStudentController);
+router.post("/bulk-upload", auth, upload.single("file"), bulkUploadStudentsController);
 router.post("/login", loginStudentController);
 router.get("/my-details", auth, getMyDetailsController);
 
