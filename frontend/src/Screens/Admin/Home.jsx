@@ -22,7 +22,7 @@ const MENU_ITEMS = [
   { id: "faculty", label: "Faculty", component: Faculty },
   { id: "branch", label: "Branch", component: Branch },
   { id: "notice", label: "Notice", component: Notice },
-  { id: "research", label: "Research", component: Research },
+  { id: "research", label: "Researcher", component: Research },
   { id: "exam", label: "Exam", component: Exam },
   { id: "subjects", label: "Subjects", component: Subjects },
   { id: "admin", label: "Admin", component: Admin },

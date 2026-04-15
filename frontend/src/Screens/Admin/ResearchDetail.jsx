@@ -31,8 +31,9 @@ const initialScholarForm = {
   coSupervisor: "",
 };
 
-const ResearchDetail = () => {
+const ResearchDetail = ({id}) => {
   const token = localStorage.getItem("userToken");
+  const userType = localStorage.getItem("userType");
   const navigate = useNavigate();
   const location = useLocation();
   const [researcher, setResearcher] = useState(null);
@@ -42,18 +43,12 @@ const ResearchDetail = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [scholarForm, setScholarForm] = useState(initialScholarForm);
 
-  const researcherId = new URLSearchParams(location.search).get("id");
+  const researcherId = new URLSearchParams(location.search).get("id") || id;
 
   const loadResearcher = async () => {
-    if (!researcherId) {
-      setResearcher(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      const response = await axiosWrapper.get(`/scholar/${researcherId}`, {
+      const response = await axiosWrapper.get(researcherId ? `/scholar/${researcherId}` : "/scholar/my-details", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -130,7 +125,7 @@ const ResearchDetail = () => {
   const handleDelete = async () => {
     try {
       toast.loading("Deleting researcher");
-      const response = await axiosWrapper.delete(`/research/${researcherId}`, {
+      const response = await axiosWrapper.delete(`/scholar/${researcherId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -165,8 +160,8 @@ const ResearchDetail = () => {
 
   return (
     <div className="w-full mx-auto flex justify-center items-start flex-col my-10">
-      <div className="flex justify-between items-center w-full">
-        <Heading title="Research Management" />
+      {userType==="Admin" && <div className="flex justify-between items-center w-full">
+        <Heading title="Researcher Details" />
         <div className="flex gap-3">
           <CustomButton variant="secondary" onClick={() => navigate("/admin?page=research")}>
             Back
@@ -175,9 +170,9 @@ const ResearchDetail = () => {
             Delete
           </CustomButton>
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-10 w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
+      <div className="mt-4 w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
         <div className="bg-white py-5 text-center border-b">
           <h2 className="text-4xl font-bold tracking-wide text-blue-700">
             {researcher.firstName +" "+researcher.lastName}

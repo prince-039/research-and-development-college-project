@@ -7,6 +7,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import { publicationFieldConfig } from "../utils/researchPublicationConfig";
 import { Edit3, Trash2 } from "lucide-react";
 import DeleteConfirm from "../components/DeleteConfirm";
+import { useParams } from "react-router-dom";
 
 const tabs = ["Journal", "Conference", "Book-Chapter", "Patent"];
 
@@ -18,8 +19,10 @@ const ScholarsPublications = ({id}) => {
   const [showPublicationModal, setShowPublicationModal] = useState(false);
   const [publicationForm, setPublicationForm] =useState({});
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen]=useState(false);
+  const s_id=useParams();
   
-  
+  if(!id)
+    id=s_id.id;
 
   useEffect(()=>{
     const loadData=async ()=>{
@@ -56,7 +59,7 @@ const ScholarsPublications = ({id}) => {
   const addPublicationRow = async(e) => {
     e.preventDefault();
     try {
-      console.log(publicationForm)
+      // console.log(publicationForm)
       toast.loading("Creating publication");
       const response = await axiosWrapper.post(`/publication/`, publicationForm, {
         headers: {
@@ -72,8 +75,9 @@ const ScholarsPublications = ({id}) => {
         toast.error(response.data.message);
       }
     } catch (error) {
+      console.log(error)
       toast.dismiss();
-      toast.error(error.response?.data?.message || "Failed to update researcher");
+      toast.error(error.response?.data?.message || "Failed to create publication");
     }
   };
 
@@ -128,7 +132,7 @@ const ScholarsPublications = ({id}) => {
       }
     } catch (error) {
       toast.dismiss();
-      toast.error(error.response?.data?.message || "Failed to update researcher");
+      toast.error(error.response?.data?.message || "Failed to update publication");
     }
   };
 
@@ -294,7 +298,7 @@ const ScholarsPublications = ({id}) => {
             </button>
           </div>
 
-          <form onSubmit={()=> publicationForm._id ? handleSubmit(publicationForm._id) : addPublicationRow()} className="p-6 space-y-6">
+          <form onSubmit={(e)=> publicationForm._id ? handleSubmit(e, publicationForm._id) : addPublicationRow(e)} className="p-6 space-y-6">
             <div className="mt-4 space-y-4">
               {publicationForm && (
                 <div className="rounded-xl border border-gray-200 p-4">

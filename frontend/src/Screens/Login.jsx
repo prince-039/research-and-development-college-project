@@ -135,9 +135,10 @@ const Login = () => {
         }
       );
 
-      const { token } = response.data.data;
+      const { token, userType } = response.data.data;
       localStorage.setItem("userToken", token);
       localStorage.setItem("userType", selected);
+      localStorage.setItem("user", userType);
       dispatch(setUserToken(token));
       navigate(`/${selected.toLowerCase()}`);
     } catch (error) {

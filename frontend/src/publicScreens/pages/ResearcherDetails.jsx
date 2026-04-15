@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
-import { Dot, Milestone } from 'lucide-react'
 import axiosWrapper from '../../utils/AxiosWrapper'
+import ScholarsPublications from '../../Screens/ScholarsPublications';
 
 
 const ResearcherDetails = () => {
@@ -15,7 +15,7 @@ const ResearcherDetails = () => {
                 setLoading(true);
                 const response=await axiosWrapper.get(`/scholar/${id}`);
                 if(response.data.success){
-                    console.log(response.data.data)
+                    // console.log(response.data.data)
                     setScholar(response.data.data);
                 }
             }
@@ -28,6 +28,9 @@ const ResearcherDetails = () => {
         }
         loadData();
     },[])
+
+    if(!scholar || loading)
+        return <div className='items-center text-xl mt-10'>Loadnig...</div>
 
     return (
         <div className="min-h-screen bg-gray-100 mb-8">
@@ -44,15 +47,36 @@ const ResearcherDetails = () => {
                 <NavLink to={`/researcher-details/${id}`} className="cursor-pointer hover:underline"
                     >Profile
                 </NavLink>
-                <NavLink to={`/researcher-details/${id}/publications`} className="cursor-pointer hover:underline"
-                    >Publications
-                </NavLink>
-                <NavLink to={`/researcher-details/${id}/semesters`} className="cursor-pointer hover:underline"
-                    >Semester Registration
-                </NavLink>
             </div>
 
-            <Outlet context={{scholar}} />
+            <div className="max-w-5xl mx-auto my-4 bg-white shadow p-6">
+                <div className="flex flex-col md:flex-row gap-6 bg-orange-300 p-6 rounded">
+                    <img
+                        src={scholar.profile ? `http://localhost:8080/media/${scholar.profile}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${scholar.firstName}`}
+                        alt={scholar.firstName}
+                        className="w-40 h-40 object-cover rounded"
+                    />
+                    <div className="text-white">
+                        <h2 className="text-2xl font-bold">
+                            {scholar.firstName + " " + scholar.lastName}
+                        </h2>
+
+                        <p className="mt-2">{scholar.rollNo}</p>
+                        <p>Computer Science and Engineering</p>
+
+                        <div className="mt-3 text-sm space-y-1">
+                            <p>📞 {scholar.phone}</p>
+                            <p>📧 {scholar.email}</p>
+                            {/* <p>🏢 {scholar.office}</p> */}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className=''>
+                <h2 className='text-center text-2xl font-semibold mt-8'>Publications</h2>
+                <ScholarsPublications />
+            </div>
 
         </div>
     );

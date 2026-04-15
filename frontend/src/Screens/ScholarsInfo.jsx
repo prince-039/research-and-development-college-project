@@ -1,9 +1,9 @@
 import React from 'react'
-import { useOutletContext } from 'react-router-dom'
 import CustomButton from '../components/CustomButton'
 
 const ScholarsInfo = ({scholar, openEditModal}) => {
-    // const {scholar}=useOutletContext();
+
+    if(!scholar) return <div className='items-center mt-10 text-xl'>Loading...</div>
 // console.log(scholar)
     return (
         <div className="min-h-screen bg-gray-100 p-6 ">
@@ -43,11 +43,11 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                     <p className="text-sm text-gray-500">Supervisor : 
-                        <span className="font-medium">{scholar.supervisor ? scholar.supervisor : " --"} </span>
+                        <span className="font-medium"> {scholar.supervisor ? scholar.supervisor.firstName+" "+scholar.supervisor.lastName : " --"} </span>
                     </p>
 
                     <p className="text-sm text-gray-500">Co-Supervisor : 
-                        <span className="font-medium">{scholar.coSupervisor ? scholar.coSupervisor : " --"}</span>
+                        <span className="font-medium"> {scholar.coSupervisor ? scholar.coSupervisor.firstName+" "+scholar.coSupervisor.lastName : " --"}</span>
                     </p>
                 </div>
                 <div className='grid grid-cols-[70%_30%] gap-2'>
@@ -99,7 +99,7 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                             <h3 className="font-semibold text-gray-700">
                                 Progress Status
                             </h3>
-                            <p className='flex justify-between'>
+                            <div className='flex justify-between'>
                                 <p className="text-gray-500">Stipend Enhancement:  
                                     <span className="font-medium text-black"> {scholar.stipendEnhancementSeminar?.status || " NA"}</span>
                                 </p>
@@ -109,7 +109,7 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                                     <span className="font-medium">{new Date(scholar.stipendEnhancementSeminar.date).toLocaleDateString()}</span>
                                 </p>
                                 )}
-                            </p>
+                            </div>
 
                             <p>
                                 <span className="text-gray-500">Pre Submission: </span>
@@ -140,15 +140,15 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                         <h2 className="text-lg font-semibold mb-4">SRC Committee</h2>
                         <div className=" pl-2 space-y-4 text-sm text-gray-500">
                             {scholar.srcCommittee?.slice()
-                            .map((member, index) => (
-                                <div key={member._id} className="relative">
+                            .map((src, index) => (
+                                <div key={src._id} className="relative">
                                     <span>{index+1}.</span>    
-                                    {member.firstName && (
+                                    {src.member && (
                                         <span className="font-bold ml-2" >
-                                            {member.firstName} 
+                                            {src.member.firstName+" "+src.member.lastName} 
                                         </span>
                                      )}
-                                    <p className='ml-4' >{member.designation}</p>
+                                    <p className='ml-6' >{src.designation}</p>
                                 </div>
                             ))}
                         </div>

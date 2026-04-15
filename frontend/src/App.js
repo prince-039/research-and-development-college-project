@@ -18,9 +18,9 @@ import ResearchPage from "./publicScreens/pages/ResearchPage";
 import NewsPage from "./publicScreens/pages/NewsPage";
 import EventPage from "./publicScreens/pages/EventPage";
 import ResearcherDetails from "./publicScreens/pages/ResearcherDetails";
-// import ScholarsInfo from "./publicScreens/components/ScholarsInfo";
-// import ScholarsPublications from "./publicScreens/components/ScholarsPublications";
-// import ScholarsSemesters from "./publicScreens/components/ScholarsSemesters";
+import ScholarsInfo from "./Screens/ScholarsInfo";
+import ScholarsPublications from "./Screens/ScholarsPublications";
+import ScholarsSemesters from "./Screens/ScholarsSemesters";
 
 const App = () => {
   return (
@@ -31,7 +31,7 @@ const App = () => {
             {/* public routes */}
             <Route path="/" element={<Layout />}>
               <Route index element={<DepartmentPage />} />
-              <Route path="faculty" element={<FacultySection />} />
+              <Route path="faculties" element={<FacultySection />} />
               <Route path="academic" element={<AcademicSection />} />
               <Route path="researchers" element={<ResearchPage />} />
               <Route path="news" element={<NewsPage />} />
@@ -39,11 +39,7 @@ const App = () => {
 
             </Route>
             <Route path="faculty-details/:id" element={<FacultyDetail />} />
-            <Route path="researcher-details/:id" element={<ResearcherDetails />} >
-              {/* <Route index  element={<ScholarsInfo />} />
-              <Route path="publications" element={<ScholarsPublications />} />
-              <Route path="semesters" element={<ScholarsSemesters />} /> */}
-            </Route>
+            <Route path="researcher-details/:id" element={<ResearcherDetails />} />
             
             {/* protected routes */}
             <Route path="/login" element={<Login />} />

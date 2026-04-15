@@ -64,13 +64,24 @@ const StudentFinder = () => {
     toast.loading("Searching students...");
     setStudents([]);
     try {
-      const response = await axiosWrapper.post(
-        `/student/search`,
-        searchParams,
-        {
-          headers: { Authorization: `Bearer ${userToken}` },
-        }
-      );
+      let response;
+      console.log(searchParams?.branch)
+      if (searchParams?.branch==="PHD") {
+        response = await axiosWrapper.get(
+          "/scholar/search",
+          {
+            headers: { Authorization: `Bearer ${userToken}` }
+          }
+        );
+      } else {
+        response = await axiosWrapper.post(
+          `/student/search`,
+          searchParams,
+          {
+            headers: { Authorization: `Bearer ${userToken}` }
+          }
+        );
+      }
 
       toast.dismiss();
       if (response.data.success) {
@@ -146,7 +157,7 @@ const StudentFinder = () => {
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Semester</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
                   <option key={sem} value={sem}>
                     Semester {sem}
                   </option>

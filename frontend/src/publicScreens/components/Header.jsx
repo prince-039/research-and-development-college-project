@@ -26,7 +26,7 @@ const Header = () => {
             </span>
             <span
               className="cursor-pointer text-2xl font-medium text-gray-800 hover:text-blue-300"
-              onClick={() => navigate("/faculty")}
+              onClick={() => navigate("/faculties")}
             >
               <Users className="mx-2 inline-block text-black " size={30} />
               Faculty

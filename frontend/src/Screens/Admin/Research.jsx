@@ -41,7 +41,7 @@ const Research = () => {
       setDataLoading(true);
       const response = await axiosWrapper.get("/scholar");
       if (response.data.success) {
-        console.log(response.data.data)
+        // console.log(response.data.data)
         setResearchItems(response.data.data);
       } else {
         toast.error(response.data.message);
@@ -268,7 +268,7 @@ const Research = () => {
                                 <BookOpenText className="inline-block mr-1" size={15} />
                                 {researcher.thesis}
                               </p>
-                              <p>Guide: {researcher.supervisor}</p>
+                              <p>Guide: {researcher.supervisor.firstName+" "+researcher.supervisor.lastName}</p>
                             </div>
                           </div>
 

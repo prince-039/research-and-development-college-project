@@ -11,6 +11,7 @@ import Profile from "./Profile";
 import Exam from "../Exam";
 import ViewMarks from "./ViewMarks";
 import { useNavigate, useLocation } from "react-router-dom";
+import ResearchDetail from "../Admin/ResearchDetail";
 
 const MENU_ITEMS = [
   { id: "home", label: "Home", component: null },
@@ -27,6 +28,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const userToken = localStorage.getItem("userToken");
+  const user = localStorage.getItem("user");
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -57,7 +59,8 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchUserDetails();
+    if(user!=="scholar")
+      fetchUserDetails();
   }, [dispatch, userToken]);
 
   const getMenuItemClass = (menuId) => {
@@ -108,21 +111,24 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto">
-        <ul className="flex justify-evenly items-center gap-10 w-full mx-auto my-8">
-          {MENU_ITEMS.map((item) => (
-            <li
-              key={item.id}
-              className={getMenuItemClass(item.id)}
-              onClick={() => handleMenuClick(item.id)}
-            >
-              {item.label}
-            </li>
-          ))}
-        </ul>
+      {user=="scholar" ? <div className="mx-8"> <ResearchDetail /> </div>
+        : (<div className="max-w-7xl mx-auto">
+            <ul className="flex justify-evenly items-center gap-10 w-full mx-auto my-8">
+              {MENU_ITEMS.map((item) => (
+                <li
+                  key={item.id}
+                  className={getMenuItemClass(item.id)}
+                  onClick={() => handleMenuClick(item.id)}
+                >
+                  {item.label}
+                </li>
+              ))}
+            </ul>
 
-        {renderContent()}
-      </div>
+            {renderContent()}
+          </div>
+        )
+      }
       <Toaster position="bottom-center" />
     </>
   );

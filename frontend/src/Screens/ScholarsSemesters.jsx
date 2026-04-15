@@ -25,8 +25,7 @@ const ScholarsSemesters = ({scholar}) => {
     FeeReceipt: null,
     dpfForm: null
   });
-
-  if (!scholar) return <div>Loading...</div>;
+  if (!scholar) return <div className="items-center mt-10 text-xl">Loading...</div>;
 
   const semesters = scholar.semesters || [];
   const currentSemester = getCurrentSemester(scholar.enrollmentDate);
