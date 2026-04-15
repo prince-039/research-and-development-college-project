@@ -139,8 +139,8 @@ exports.bulkUploadController = async (req, res) => {
 exports.getAllScholars = async (req, res) => {
   try {
     const scholars = await Scholar.find()
-      .populate("supervisor", "name")
-      .populate("coSupervisor", "name");
+      .populate("supervisor", "firstName lastName")
+      .populate("coSupervisor", "firstName lastName");
     if(!scholars)
       return ApiResponse.created([], "No Record!").send(res);
 
@@ -150,6 +150,79 @@ exports.getAllScholars = async (req, res) => {
   }
 };
 
+exports.getScholar = async (req, res) => {
+  try {
+    const id = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return ApiResponse.created("Wrong request!").send(res);
+    }
+
+    const scholar = await Scholar.findById(id)
+      .populate("supervisor", "firstName lastName")
+      .populate("coSupervisor", "firstName lastName")
+      .populate("srcCommittee.member", "firstName lastName");
+
+    if (!scholar) {
+      return ApiResponse.created("No Record!").send(res);
+    }
+
+    return ApiResponse.created(scholar, "Data fetched!").send(res);
+  } catch (error) {
+    return ApiResponse.created(error.message).send(res);
+  }
+};
+
+exports.findScholar = async (req, res) => {
+  try {
+    const id = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return ApiResponse.created("Wrong request!").send(res);
+    }
+
+    const scholars = await Scholar.find({
+      $or: [
+        { supervisor: id },
+        { coSupervisor: id },
+        { "srcCommittee.member": id }
+      ] 
+    });
+
+    if (!scholars) {
+      return ApiResponse.created("No Record!").send(res);
+    }
+
+    const scholarsWithRelation = scholars.map((scholar) => {
+      let relation = [];
+
+      if (scholar.supervisor?.toString() === id.toString()) {
+        relation.push("Supervisor");
+      }
+
+      if (scholar.coSupervisor?.toString() === id.toString()) {
+        relation.push("Co-Supervisor");
+      }
+
+      const isCommittee = scholar.srcCommittee?.some(
+        (m) => m.member?.toString() === id.toString()
+      );
+
+      if (isCommittee) {
+        relation.push("Committee Member");
+      }
+
+      return {
+        ...scholar.toObject(),
+        relation
+      };
+    });
+
+    return ApiResponse.created(scholarsWithRelation, "Data fetched!").send(res);
+  } catch (error) {
+    return ApiResponse.created(error.message).send(res);
+  }
+};
 
 exports.getScholarById = async (req, res) => {
   try {

@@ -10,6 +10,7 @@ const fs = require("fs/promises");
 const { parseCsvFile } = require("../../utils/csv.utils");
 
 const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+const Scholar = require("../../models/scholar.model")
 
 const resolveBranch = async (branchValue) => {
   const trimmedBranchValue = String(branchValue || "").trim();
@@ -31,27 +32,17 @@ const resolveBranch = async (branchValue) => {
   });
 };
 
-const generateUniqueEnrollmentNo = async () => {
-  let enrollmentNo;
-  let exists = true;
-
-  while (exists) {
-    enrollmentNo = String(Math.floor(100000 + Math.random() * 900000));
-    exists = await studentDetails.exists({ enrollmentNo });
-  }
-
-  return enrollmentNo;
-};
-
 const loginStudentController = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await studentDetails.findOne({ email });
+    let user = await studentDetails.findOne({ email });
 
     if (!user) {
-      return ApiResponse.notFound("User not found").send(res);
+      user = await Scholar.findOne({ email }).select("+password");
     }
+    if(!user)
+      return ApiResponse.notFound("User not found").send(res);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -63,7 +54,11 @@ const loginStudentController = async (req, res) => {
       expiresIn: "1h",
     });
 
-    return ApiResponse.success({ token }, "Login successful").send(res);
+    let userType="";
+    if(user.type)
+      userType="scholar";
+
+    return ApiResponse.success({ token, userType }, "Login successful").send(res);
   } catch (error) {
     console.error("Login Error: ", error);
     return ApiResponse.internalServerError().send(res);
@@ -92,8 +87,7 @@ const registerStudentController = async (req, res) => {
   try {
     const profile = req.file?.filename || "";
 
-    const enrollmentNo = "2023pgcsca016"; 
-    // const enrollmentNo = Math.floor(100000 + Math.random() * 900000);
+    const {enrollmentNo} = req.body; 
     const email = `${enrollmentNo}@nitjsr.ac.in`;
 
     const user = await studentDetails.create({
