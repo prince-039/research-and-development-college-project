@@ -96,14 +96,10 @@ const ScholarFinder = () => {
   };
 
   return (
-    <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
-      <div className="flex justify-between items-center w-full">
-        <Heading title="Scholar Finder" />
-      </div>
-
+    <div className="w-full mx-auto flex justify-center items-start flex-col mb-10">
       <div className="my-6 mx-auto w-full">
-        <form onSubmit={searchStudents} className="flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-[90%] mx-auto">
+        <form onSubmit={searchStudents} className="grid grid-cols-[75%_25%] mx-auto ml-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Enrollment Number
@@ -142,14 +138,14 @@ const ScholarFinder = () => {
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select Branch</option>
+                <option value="">--Select--</option>
                 <option value="Regular">Regular</option>
                 <option value="Regular">Part-Time</option>
               </select>
             </div>
           </div>
 
-          <div className="mt-6 flex justify-center w-[10%] mx-auto">
+          <div className="mt-6 flex justify-start ml-4">
             <CustomButton
               type="submit"
               disabled={dataLoading}
