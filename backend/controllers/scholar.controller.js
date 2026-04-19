@@ -13,18 +13,21 @@ exports.createScholar = async (req, res) => {
       email, 
       enrollmentDate, 
       phone,
-      password 
     } = req.body;
 
-    if (!firstName || !lastName || !rollNo || !email || !enrollmentDate || !phone || !password) {
-      return ApiResponse.created("Required fields missing").send(res);
+    if (!firstName || !lastName || !rollNo || !email || !enrollmentDate || !phone) {
+      return ApiResponse.badRequest("Required fields missing").send(res);
+    }
+
+    if (req.body.coSupervisor === "") {
+      delete req.body.coSupervisor;
     }
 
     const existing = await Scholar.findOne({ rollNo });
     if (existing) {
-      return ApiResponse.created("Scholar with this roll number already exists").send(res);
+      return ApiResponse.success("Scholar with this roll number already exists").send(res);
     }
-
+    const password=firstName+"123";
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -41,7 +44,7 @@ exports.createScholar = async (req, res) => {
     return ApiResponse.created(result, "Record Added.").send(res);
 
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -136,15 +139,52 @@ exports.bulkUploadController = async (req, res) => {
   }
 };
 
+exports.addScholarByFaculty = async (req, res) => {
+  try {
+    const facultyId = req.userId;
+    const { association, ...scholarData } = req.body;
+console.log(scholarData.enrollmentDate)
+    if(!scholarData.email){
+      return ApiResponse.badRequest("Email required").send(res);
+    }
+
+    const exist= await Scholar.findOne({email : scholarData.email});
+    if(exist){
+      return ApiResponse.success("Already exist with email.").send(res);
+    }
+  
+    if (!association) {
+      return ApiResponse.badRequest("Association type required (supervisor / coSupervisor)").send(res);
+    }
+
+    if (association === "supervisor") {
+      scholarData.supervisor = facultyId;
+    } else if (association === "coSupervisor") {
+      scholarData.coSupervisor = facultyId;
+    } else {
+      return ApiResponse.badRequest("Invalid association type").send(res);
+    }
+
+    scholarData.password=scholarData.firstName+"123";
+    const scholar = await Scholar.create(scholarData);
+
+    return ApiResponse.created(scholar, "Scholar added successfully").send(res);
+
+  } catch (error) {
+    console.error("Add Scholar Error:", error);
+    return ApiResponse.error(error, "Server error").send(res);
+  }
+};
+
 exports.getAllScholars = async (req, res) => {
   try {
     const scholars = await Scholar.find()
       .populate("supervisor", "firstName lastName")
       .populate("coSupervisor", "firstName lastName");
     if(!scholars)
-      return ApiResponse.created([], "No Record!").send(res);
+      return ApiResponse.success([], "No Record!").send(res);
 
-    return ApiResponse.created(scholars, "Data fetched Successfully!").send(res);
+    return ApiResponse.success(scholars, "Data fetched Successfully!").send(res);
   } catch (error) {
     return ApiResponse.error(error.message).send(res);
   }
@@ -155,7 +195,7 @@ exports.getScholar = async (req, res) => {
     const id = req.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.created("Wrong request!").send(res);
+      return ApiResponse.badRequest("Wrong request!").send(res);
     }
 
     const scholar = await Scholar.findById(id)
@@ -164,12 +204,12 @@ exports.getScholar = async (req, res) => {
       .populate("srcCommittee.member", "firstName lastName");
 
     if (!scholar) {
-      return ApiResponse.created("No Record!").send(res);
+      return ApiResponse.success("No Record!").send(res);
     }
 
-    return ApiResponse.created(scholar, "Data fetched!").send(res);
+    return ApiResponse.success(scholar, "Data fetched!").send(res);
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -178,7 +218,7 @@ exports.findScholar = async (req, res) => {
     const id = req.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.created("Wrong request!").send(res);
+      return ApiResponse.badRequest("Wrong request!").send(res);
     }
 
     const scholars = await Scholar.find({
@@ -190,7 +230,7 @@ exports.findScholar = async (req, res) => {
     });
 
     if (!scholars) {
-      return ApiResponse.created("No Record!").send(res);
+      return ApiResponse.success("No Record!").send(res);
     }
 
     const scholarsWithRelation = scholars.map((scholar) => {
@@ -218,9 +258,9 @@ exports.findScholar = async (req, res) => {
       };
     });
 
-    return ApiResponse.created(scholarsWithRelation, "Data fetched!").send(res);
+    return ApiResponse.success(scholarsWithRelation, "Data fetched!").send(res);
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -229,7 +269,7 @@ exports.getScholarById = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.created("Wrong request!").send(res);
+      return ApiResponse.badRequest("Wrong request!").send(res);
     }
 
     const scholar = await Scholar.findById(id)
@@ -238,12 +278,12 @@ exports.getScholarById = async (req, res) => {
       .populate("srcCommittee.member", "firstName lastName");
 
     if (!scholar) {
-      return ApiResponse.created("No Record!").send(res);
+      return ApiResponse.success("No Record!").send(res);
     }
 
-    return ApiResponse.created(scholar, "Data fetched!").send(res);
+    return ApiResponse.success(scholar, "Data fetched!").send(res);
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -253,7 +293,7 @@ exports.updateScholar = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.created("Wrong request!").send(res);
+      return ApiResponse.badRequest("Wrong request!").send(res);
     }
 
     const updated = await Scholar.findByIdAndUpdate(
@@ -266,12 +306,12 @@ exports.updateScholar = async (req, res) => {
       .populate("srcCommittee.member", "firstName lastName");
 
     if (!updated) {
-      return ApiResponse.created("Scholar not found").send(res);
+      return ApiResponse.success("Scholar not found").send(res);
     }
 
-    return ApiResponse.created(updated, "Record updated!").send(res);
+    return ApiResponse.success(updated, "Record updated!").send(res);
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -281,17 +321,17 @@ exports.deleteScholar = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.created("Wrong request!").send(res);
+      return ApiResponse.badRequest("Wrong request!").send(res);
     }
 
     const deleted = await Scholar.findByIdAndDelete(id);
 
     if (!deleted) {
-      return ApiResponse.created("Record not found").send(res);
+      return ApiResponse.success("Record not found").send(res);
     }
 
-    return ApiResponse.created("Record deleted successfully").send(res);
+    return ApiResponse.success("Record deleted successfully").send(res);
   } catch (error) {
-    return ApiResponse.created(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };

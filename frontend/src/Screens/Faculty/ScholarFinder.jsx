@@ -5,8 +5,24 @@ import axiosWrapper from "../../utils/AxiosWrapper";
 import CustomButton from "../../components/CustomButton";
 import NoData from "../../components/NoData";
 import ResearchDetail from "../Admin/ResearchDetail";
+import { IoMdClose } from "react-icons/io";
 
-const ScholarFinder = () => {
+const initialScholarForm = {
+  type: "Regular",
+  firstName: "",
+  lastName: "",
+  rollNo: "",
+  enrollmentDate: "",
+  department: "Computer Science and Engineering",
+  email: "",
+  phone: "",
+  profile: "",
+  association: "",
+  supervisor: ""
+}
+
+const ScholarFinder = ({activeTab}) => {
+  const token=localStorage.getItem("userToken");
   const [searchParams, setSearchParams] = useState({
     enrollmentNo: "",
     name: "",
@@ -19,6 +35,8 @@ const ScholarFinder = () => {
   const [showModal, setShowModal] = useState(false);
   const userToken = localStorage.getItem("userToken");
   const [hasSearched, setHasSearched] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [scholarForm, setScholarForm] = useState(initialScholarForm);
 
   useEffect(() => {
     const fetchScholars = async () => {
@@ -95,6 +113,31 @@ const ScholarFinder = () => {
     setShowModal(true);
   };
 
+  const handleScholarChange = (field, value) => {
+    setScholarForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addHandleSubmit = async(e)=>{
+    e.preventDefault();
+    try {
+      toast.loading("Adding researcher");
+      const response = await axiosWrapper.post("/scholar/by-faculty",
+        scholarForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.dismiss();
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setShowAddModal(false);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.message || "Failed to save researcher");
+    }
+  }
+
   return (
     <div className="w-full mx-auto flex justify-center items-start flex-col mb-10">
       <div className="my-6 mx-auto w-full">
@@ -140,18 +183,24 @@ const ScholarFinder = () => {
               >
                 <option value="">--Select--</option>
                 <option value="Regular">Regular</option>
-                <option value="Regular">Part-Time</option>
+                <option value="Part-Time">Part-Time</option>
               </select>
             </div>
           </div>
 
-          <div className="mt-6 flex justify-start ml-4">
+          <div className="mt-6 flex justify-between ml-4">
             <CustomButton
               type="submit"
               disabled={dataLoading}
               variant="primary"
             >
               {dataLoading ? "Searching..." : "Search"}
+            </CustomButton>
+            <CustomButton
+              onClick={()=>setShowAddModal(true)}
+              variant="primary"
+            >
+              Add Scholar
             </CustomButton>
           </div>
         </form>
@@ -241,6 +290,53 @@ const ScholarFinder = () => {
                 </svg>
             </CustomButton>
             <ResearchDetail id={selectedScholar._id} />
+          </div>
+        )}
+
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white rounded-lg w-[90%] max-w-6xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h2 className="text-xl font-semibold">
+                  Add Researcher
+                </h2>
+                <button onClick={()=>setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <IoMdClose className="text-3xl" />
+                </button>
+              </div>
+
+              <form onSubmit={addHandleSubmit} className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input type="text" placeholder="Scholar First Name" value={scholarForm?.firstName} onChange={(e) => handleScholarChange("firstName", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" placeholder="Scholar Last Name" value={scholarForm?.lastName} onChange={(e) => handleScholarChange("lastName", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" placeholder="Roll number" value={scholarForm.rollNo} onChange={(e) => handleScholarChange("rollNo", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" placeholder="Department" value={scholarForm.department} onChange={(e) => handleScholarChange("department", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <select value={scholarForm.type} onChange={(e) => handleScholarChange("type", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Regular">Regular</option>
+                    <option value="Part-Time">Part-Time</option>
+                  </select>
+                  <input type="text" placeholder="Enrollment Date(dd/mm/yyyy)" value={scholarForm.enrollmentDate} onChange={(e) => handleScholarChange("enrollmentDate", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="email" placeholder="Email" value={scholarForm.email} onChange={(e) => handleScholarChange("email", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <select value={scholarForm.association} onChange={(e) => handleScholarChange("association", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled>Assosiated As</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="coSupervisor">Co-Supervisor</option>
+                  </select>
+                  <input type="text" placeholder="Phone" value={scholarForm.phone} onChange={(e) => handleScholarChange("phone", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  {scholarForm.association==="coSupervisor" && <input type="email" placeholder="Supervisor Email" value={scholarForm.supervisor} onChange={(e) => handleScholarChange("supervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />}
+                  <input type="file" placeholder="Profile image" value={scholarForm.profile} onChange={(e) => handleScholarChange("profile", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div className="flex justify-end gap-4 pt-4 border-t">
+                  <CustomButton variant="secondary" onClick={()=>setShowAddModal(false)}>
+                    Cancel
+                  </CustomButton>
+                  <CustomButton type="submit" variant="primary">
+                    Add
+                  </CustomButton>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
