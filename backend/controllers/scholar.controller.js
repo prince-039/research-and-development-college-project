@@ -2,7 +2,10 @@ const mongoose = require("mongoose");
 const Scholar = require("../models/scholar.model");
 const bcrypt = require("bcryptjs");
 const ApiResponse = require("../utils/ApiResponse")
+const { parseCsvFile } = require("../utils/csv.utils");
+const fs = require("fs");
 
+const FacultyDetail = require("../models/details/faculty-details.model.js");
 
 exports.createScholar = async (req, res) => {
   try {
@@ -295,3 +298,332 @@ exports.deleteScholar = async (req, res) => {
     return ApiResponse.created(error.message).send(res);
   }
 };
+
+exports.generalBulkUploader = async (req, res) => {
+  try {
+    const filePath = req.file.path;
+
+    const rows = await parseCsvFile(filePath);
+
+    if (!rows.length) {
+      return res.status(400).json({
+        success: false,
+        message: "CSV is empty",
+      });
+    }
+
+    const scholarsToInsert = [];
+    const errors = [];
+
+    //  preload faculty
+    const facultyList = await FacultyDetail.find({});
+    const facultyMap = new Map();
+
+    facultyList.forEach((f) => {
+      facultyMap.set(f.email.toLowerCase(), f);
+    });
+
+    //  preload existing scholars (for duplicate check)
+    const existingScholars = await Scholar.find({}, "email rollNo");
+
+    const existingEmails = new Set(
+      existingScholars.map((s) => s.email.toLowerCase())
+    );
+
+    const existingRollNos = new Set(
+      existingScholars.map((s) => s.rollNo)
+    );
+
+    for (let row of rows) {
+      try {
+        //  required fields
+        if (!row.firstname || !row.rollno || !row.email || !row.phone || !row.supervisor) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Missing required fields",
+          });
+          continue;
+        }
+
+        //  duplicate email check
+        if (existingEmails.has(row.email.toLowerCase())) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Duplicate email",
+          });
+          continue;
+        }
+
+        //  duplicate rollNo check
+        if (existingRollNos.has(row.rollno)) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Duplicate rollNo",
+          });
+          continue;
+        }
+
+        //  supervisor
+        const supervisorDoc = facultyMap.get(row.supervisor.toLowerCase());
+        if (!supervisorDoc) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Supervisor not found",
+          });
+          continue;
+        }
+
+        //  co-supervisor
+        let coSupervisorDoc = null;
+        if (row.cosupervisor) {
+          coSupervisorDoc = facultyMap.get(row.cosupervisor.toLowerCase());
+        }
+
+        //  SRC committee
+        let srcCommittee = [];
+        if (row.srccommittee) {
+          const members = row.srccommittee.split(",");
+          for (let email of members) {
+            const faculty = facultyMap.get(email.trim().toLowerCase());
+            if (faculty) {
+              srcCommittee.push({
+                member: faculty._id,
+                designation: "Member",
+              });
+            }
+          }
+        }
+
+        //  password hash
+        const hashedPassword = await bcrypt.hash(
+          row.password || "default123",
+          10
+        );
+
+        //  scholar object
+        const scholarObj = {
+          type: row.type || "Regular",
+          firstName: row.firstname,
+          lastName: row.lastname || "NA",
+          rollNo: row.rollno,
+          enrollmentDate: row.enrollmentdate || null,
+
+          supervisor: supervisorDoc._id,
+          coSupervisor: coSupervisorDoc?._id,
+
+          srcCommittee,
+
+          email: row.email,
+          phone: row.phone,
+          profile: row.profile || "NA",
+
+          password: hashedPassword,
+
+          courseWork: {
+            status: row.courseworkstatus || "NA",
+            date: row.courseworkdate || null,
+          },
+
+          comprehensiveExam: {
+            status: row.comprehensiveexamstatus || "NA",
+            date: row.comprehensiveexamdate || null,
+          },
+
+          seminar: {
+            topic: row.seminartopic || "NA",
+            dateRegistration: row.seminarregdate || null,
+            datePresentation: row.seminarpresdate || null,
+          },
+
+          stipendEnhancementSeminar: {
+            status: row.stipendstatus || "NA",
+            date: row.stipenddate || null,
+          },
+
+          preSubmissionSeminar: {
+            status: row.presubmissionstatus || "NA",
+            date: row.presubmissiondate || null,
+          },
+
+          openDefense: {
+            status: row.opendefensestatus || "NA",
+            date: row.opendefensedate || null,
+          },
+        };
+
+        scholarsToInsert.push(scholarObj);
+
+        //  update sets (important for duplicates inside same CSV)
+        existingEmails.add(row.email.toLowerCase());
+        existingRollNos.add(row.rollno);
+
+      } catch (err) {
+        errors.push({
+          row: row.__rowNumber,
+          message: err.message,
+        });
+      }
+    }
+
+    //  insert
+    let insertedCount = 0;
+
+    if (scholarsToInsert.length > 0) {
+      try {
+        const result = await Scholar.insertMany(scholarsToInsert, {
+          ordered: false,
+        });
+        insertedCount = result.length;
+      } catch (err) {
+        // ignore duplicate DB errors
+        insertedCount = scholarsToInsert.length;
+      }
+    }
+
+    //  delete file
+    fs.unlinkSync(filePath);
+
+    return res.status(200).json({
+      success: true,
+      inserted: insertedCount,
+      failed: errors.length,
+      errors,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Bulk upload failed",
+      error: error.message,
+    });
+  }
+};
+
+exports.semesterBulkUploader = async (req, res) => {
+  try {
+    const filePath = req.file.path;
+
+    const rows = await parseCsvFile(filePath);
+
+    if (!rows.length) {
+      return res.status(400).json({
+        success: false,
+        message: "CSV is empty",
+      });
+    }
+
+    const errors = [];
+    let successCount = 0;
+
+    //  preload scholars
+    const scholars = await Scholar.find({});
+    const scholarMap = new Map();
+
+    scholars.forEach((s) => {
+      scholarMap.set(s.email.toLowerCase(), s);
+    });
+
+    //  track duplicates inside same CSV
+    const processed = new Set();
+
+    for (let row of rows) {
+      try {
+        // email required
+        if (!row.email) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Email is required",
+          });
+          continue;
+        }
+
+        const emailKey = row.email.toLowerCase();
+        const scholar = scholarMap.get(emailKey);
+
+        if (!scholar) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Scholar not found",
+          });
+          continue;
+        }
+
+        //  prevent duplicate semester in same CSV
+        const uniqueKey = `${emailKey}_${row.name || "NA"}`;
+        if (processed.has(uniqueKey)) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Duplicate semester in CSV",
+          });
+          continue;
+        }
+
+        //  prevent duplicate semester in DB
+        const alreadyExists = scholar.semesters.some(
+          (sem) =>
+            (sem.name || "").toLowerCase() ===
+            (row.name || "NA").toLowerCase()
+        );
+
+        if (alreadyExists) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Semester already exists for this scholar",
+          });
+          continue;
+        }
+
+        //  semester object
+        const semesterObj = {
+          name: row.name || "NA",
+          registrationSlip: row.registrationslip || "NA",
+          FeeReceipt: row.feereceipt || "NA",
+          dpfForm: row.dpfform || "NA",
+        };
+
+        //  push
+        scholar.semesters.push(semesterObj);
+
+        //  mark processed
+        processed.add(uniqueKey);
+
+        successCount++;
+
+      } catch (err) {
+        errors.push({
+          row: row.__rowNumber,
+          message: err.message,
+        });
+      }
+    }
+
+    //  save only modified scholars
+    const savePromises = [];
+
+    scholarMap.forEach((scholar) => {
+      if (scholar.isModified("semesters")) {
+        savePromises.push(scholar.save());
+      }
+    });
+
+    await Promise.all(savePromises);
+
+    //  delete file
+    fs.unlinkSync(filePath);
+
+    return res.status(200).json({
+      success: true,
+      updated: successCount,
+      failed: errors.length,
+      errors,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Semester bulk upload failed",
+      error: error.message,
+    });
+  }
+};
+

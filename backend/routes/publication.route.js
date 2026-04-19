@@ -6,11 +6,15 @@ const {
   getAllPublications,
   getPublicationById,
   updatePublication,
+  publicationBulkUploader,
   deletePublication
 } = require("../controllers/publication.controller");
 const Auth = require("../middlewares/auth.middleware")
+const upload = require("../middlewares/multer.middleware");
 
 router.post("/", createPublication);
+
+router.post("/bulk-upload", upload.single("file"), publicationBulkUploader);
 
 router.get("/", getAllPublications);
 
