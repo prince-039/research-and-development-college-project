@@ -133,11 +133,11 @@ const StudentFinder = () => {
 
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
-      <div className="flex justify-between items-center w-full border-b p-2">
-        <div className="flex gap-4">
+      <div className="flex justify-center w-full border-b p-2">
+        <div className="flex gap-6">
           {branches?.map((tab) => (
             <button
-              key={tab}
+              key={tab.branchId}
               onClick={() => handleTabChange(tab)}
               className={`px-4 py-2 rounded-lg ${
                 activeTab === tab.name
@@ -148,22 +148,6 @@ const StudentFinder = () => {
               {tab.name}
             </button>
           ))}
-        </div>
-
-        <div>
-          <select
-            onChange={(e) => handleTabChange(e.target.value)}
-            className="px-4 py-2 border rounded bg-white"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Select Course
-            </option>
-            <option value="btech">B.Tech</option>
-            <option value="mtech">M.Tech</option>
-            <option value="mca">MCA</option>
-            <option value="phd">PhD</option>
-          </select>
         </div>
       </div>
 
