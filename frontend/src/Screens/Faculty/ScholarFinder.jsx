@@ -84,7 +84,7 @@ const ScholarFinder = ({activeTab}) => {
     const filtered = allScholars.filter((student) => {
         return (
         (searchParams.enrollmentNo === "" ||
-            student.enrollmentNo
+            student.rollNo
             .toLowerCase()
             .includes(searchParams.enrollmentNo.toLowerCase())) &&
 

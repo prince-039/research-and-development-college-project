@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axiosWrapper from "../utils/AxiosWrapper";
 
@@ -17,26 +17,64 @@ const getCurrentSemester = (enrollDate) => {
   return Math.min(Math.max(semester, 1), 10);
 };
 
-const ScholarsSemesters = ({scholar}) => {
+const ScholarsSemesters = ({scholar, setRefresh}) => {
   const token = localStorage.getItem("userToken");
   const [activeSem, setActiveSem] = useState(1);
-  const [pdfFiles, setPdfFiles] = useState({
-    registrationSlip: null,
-    FeeReceipt: null,
-    dpfForm: null
-  });
+
   if (!scholar) return <div className="items-center mt-10 text-xl">Loading...</div>;
 
   const semesters = scholar.semesters || [];
   const currentSemester = getCurrentSemester(scholar.enrollmentDate);
 
+  const initializeSemester = async()=>{
+    const getSession = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      let startYear, endYear;
+
+      if (month < 6) {
+        startYear = year - 1;
+        endYear = year;
+      } else {
+        startYear = year;
+        endYear = year + 1;
+      }
+      const academic = `${startYear}-${String(endYear).slice(-2)}`;
+
+      return academic;
+    };
+    const sem=["Autumn Semester ", "Spring Semester "];
+    try{
+      toast.loading("Geting semester...");
+      const response= await axiosWrapper.post("/scholar/semester", 
+        {id: scholar._id ,sem: sem[(activeSem-1)%2]+getSession()},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      toast.dismiss();
+      if(response.data.success){
+        setRefresh(activeSem);
+      }
+    }
+    catch(error){
+      toast.error(error.message);
+    }
+  }
+
+  if(!semesters[activeSem-1])
+    initializeSemester();
+
   const semData = semesters[activeSem - 1];
 
   const pdfs = semData
     ? [
-        { label: "Registration Slip", link: semData.registrationSlip },
-        { label: "Fee Receipt", link: semData.FeeReceipt },
-        { label: "DPF Form", link: semData.dpfForm }
+        { label: "Registration Slip", link: semData.registrationSlip, key: "registrationSlip" },
+        { label: "Fee Receipt", link: semData.FeeReceipt, key: "FeeReceipt" },
+        { label: "DPF Form", link: semData.dpfForm, key: "dpfForm" }
       ]
     : [];
   
@@ -50,31 +88,26 @@ const ScholarsSemesters = ({scholar}) => {
 
     try {
       const formData = new FormData();
-      formData.append(key, file);
-      formData.append("semester", activeSem);
-      formData.append("scholarId", scholar._id);
+      formData.append("file", file);
+      formData.append("fieldName", key);
+      formData.append("semesterIndex", activeSem-1);
+      formData.append("id", scholar._id);
 
       const res = await axiosWrapper.put(
-        `/scholar/update-semester-pdf`,
+        "/scholar/update-semester",
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           }
         }
       );
 
       if(res.data.success){
-        // console.log(res.data);
-        setPdfFiles((prev) => ({
-          ...prev,
-          [key]: file
-        }));
+        setRefresh(key)
         toast.success("File Changed");
       }
     } catch (err) {
-      console.error(err);
       toast.error("Upload failed");
     }
   };
@@ -110,46 +143,33 @@ const ScholarsSemesters = ({scholar}) => {
           {!semData ? (
             <p className="text-gray-500">No data available</p>
           ) : (
-            pdfs
-              .filter((pdf) => pdf.link) // skip empty
-              .map((pdf, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-3 gap-4 w-full border rounded-lg p-4 my-2  hover:shadow"
+            pdfs.map((pdf, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-3 gap-4 w-full border rounded-lg p-4 my-2  hover:shadow"
+              >
+                <span className="font-medium text-gray-700">
+                  {pdf.label} :
+                </span>
+                <a
+                  href={`${process.env.REACT_APP_MEDIA_LINK?.trim()}/${pdf.link}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${pdf.link?"text-blue-600":"text-gray-500 cursor-help"} text-sm ${pdf.link && "hover:underline"}`}
                 >
-                  <span className="font-medium text-gray-700">
-                    {pdf.label} :
-                  </span>
-
-                  <div className="flex gap-3">
-                    <a
-                      href={pdf.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 text-sm hover:underline"
-                    >
-                      Open
-                    </a>
-
-                    <a
-                      href={pdf.link}
-                      download
-                      className="text-green-600 text-sm hover:underline"
-                    >
-                      Download
-                    </a>
-                  </div>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      handleFileChange(pdf.key, file); // create new
-                    }}
-                    className="text-xs"
-                  />
-                </div>
-              ))
+                  {pdf.link ? "Open" : "(No file available!)"}
+                </a>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    handleFileChange(pdf.key, file); // create new
+                  }}
+                  className="text-xs"
+                />
+              </div>
+            ))
           )}
         </div>
       </div>

@@ -12,9 +12,9 @@ const {
 const Auth = require("../middlewares/auth.middleware")
 const upload = require("../middlewares/multer.middleware");
 
-router.post("/", createPublication);
+router.post("/", Auth, createPublication);
 
-router.post("/bulk-upload", upload.single("file"), publicationBulkUploader);
+router.post("/bulk-upload", Auth, upload.single("file"), publicationBulkUploader);
 
 router.get("/", getAllPublications);
 

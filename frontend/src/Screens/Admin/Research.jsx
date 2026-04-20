@@ -127,13 +127,14 @@ const Research = () => {
     setScholarForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleBulkUpload = async (csvFile) => {
+  const handleBulkUpload = async (type, csvFile) => {
     try {
       toast.loading("Uploading researchers...");
       const payload = new FormData();
       payload.append("file", csvFile);
 
-      const response = await axiosWrapper.post(`/scholar/bulk-upload`, payload, {
+      const response = await axiosWrapper.post(`/${type==="publication"? "publication/bulk-upload" : "scholar/"+type+"-bulk-upload"}`,
+        payload, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -338,43 +339,6 @@ const Research = () => {
       <BulkUploadModal
         isOpen={showBulkUploadModal}
         onClose={() => setShowBulkUploadModal(false)}
-        title="Bulk Upload Researchers"
-        uploadLabel="Upload Researchers"
-        columns={[
-          "name",
-          "roll",
-          "department",
-          "email",
-          "phone",
-          "website",
-          "profileImage",
-          "thesis",
-          "year",
-          "guide",
-          "programType",
-          "semesterRegistration",
-          "publicationCategory",
-          "publicationTitle",
-          "publicationName",
-          "applicationNumber",
-          "scopusIndex",
-          "dateOfConference",
-          "venueOfConference",
-          "publisher",
-          "dateOfFiled",
-          "dateOfFer",
-          "dateOfGrant",
-          "grantNumber",
-          "publicationType",
-          "impactFactor",
-          "status",
-          "dateOfCommunication",
-          "isbn",
-          "volumeNumber",
-          "articleNumber",
-          "publishYear",
-          "link",
-        ]}
         onUpload={handleBulkUpload}
       />
     </div>

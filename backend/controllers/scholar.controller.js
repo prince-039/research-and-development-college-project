@@ -51,102 +51,11 @@ exports.createScholar = async (req, res) => {
   }
 };
 
-exports.bulkUploadController = async (req, res) => {
-  try {
-    if (!req.file) {
-      return ApiResponse.badRequest("CSV file is required").send(res);
-    }
-
-    const rows = await parseCsvFile(req.file.path);
-    await fs.unlink(req.file.path).catch(() => {});
-
-    if (rows.length === 0) {
-      return ApiResponse.badRequest(
-        "CSV file must contain at least one researcher row"
-      ).send(res);
-    }
-
-    const inserted = [];
-    const errors = [];
-    const seenRolls = new Set();
-
-    for (const row of rows) {
-      try {
-        const payload = normalizePayload({
-          type: "Regular",
-          firstName: row.firstName,
-          lastName: row.lastName,
-          rollNo: row.rollNo,
-          enrollmentDate: row.enrollmentDate,
-          department: row.department || "Computer Science and Engineering",
-          email: row.email,
-          phone: row.phone,
-          profile: row.profile,
-          supervisor: row.supervisor,
-          coSupervisor: row.coSupervisor,
-        });
-
-        const validationError = validateScholarPayload(payload);
-        if (validationError) {
-          throw new Error(validationError);
-        }
-
-        const normalizedRoll = String(payload.roll || "").trim().toLowerCase();
-        if (seenRolls.has(normalizedRoll)) {
-          throw new Error("Duplicate roll number in uploaded file");
-        }
-
-        const existingResearcher = await Scholar.findOne({
-          type: "Regular",
-          rollNo: payload.rollNo,
-        });
-
-        if (existingResearcher) {
-          throw new Error("Researcher with this roll number already exists");
-        }
-
-        const createdResearcher = await Scholar.create(payload);
-        inserted.push({
-          _id: createdResearcher._id,
-          firstName: createdResearcher.firstName,
-          lastName: createdResearcher.lastName,
-          rollNo: createdResearcher.rollNo,
-        });
-        seenRolls.add(normalizedRoll);
-      } catch (rowError) {
-        errors.push({
-          row: row.__rowNumber,
-          message: rowError.message || "Invalid row",
-        });
-      }
-    }
-
-    return ApiResponse.success(
-      {
-        insertedCount: inserted.length,
-        failedCount: errors.length,
-        inserted,
-        errors,
-      },
-      inserted.length > 0
-        ? "Research bulk upload processed"
-        : "No researchers were uploaded"
-    ).send(res);
-  } catch (error) {
-    if (req.file?.path) {
-      await fs.unlink(req.file.path).catch(() => {});
-    }
-    return ApiResponse.internalServerError(
-      error.message || "Research bulk upload failed"
-    ).send(res);
-  }
-};
-
 exports.addScholarByFaculty = async (req, res) => {
   try {
     const facultyId = req.userId;
     const { association, ...scholarData } = req.body;
-console.log(scholarData.enrollmentDate)
+
     if(!scholarData.email){
       return ApiResponse.badRequest("Email required").send(res);
     }
@@ -175,6 +84,42 @@ console.log(scholarData.enrollmentDate)
 
   } catch (error) {
     console.error("Add Scholar Error:", error);
+    return ApiResponse.error(error, "Server error").send(res);
+  }
+};
+
+exports.initializeSemester = async (req, res) => {
+  try {
+    const {id, sem} = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return ApiResponse.badRequest("Invalid ID").send(res);
+    }
+
+    if (!sem) {
+      return ApiResponse.badRequest("Semester name requiered").send(res);
+    }
+
+    const exist= await Scholar.findById(id);
+    if(!exist){
+      return ApiResponse.success("Scholar not exist.").send(res);
+    }
+
+    const alreadyExists = exist.semesters.some(s => s.name === sem);
+
+    if (!alreadyExists) {
+      exist.semesters.push({
+        name: sem,
+        registrationSlip: "",
+        FeeReceipt: "",
+        dpfForm: ""
+      });
+    }
+    await exist.save();
+
+    return ApiResponse.created(exist, "Scholar added successfully").send(res);
+
+  } catch (error) {
     return ApiResponse.error(error, "Server error").send(res);
   }
 };
@@ -290,6 +235,46 @@ exports.getScholarById = async (req, res) => {
   }
 };
 
+
+exports.updateSemester = async (req, res) => {
+  try {
+    // const id = req.userId;
+    const { semesterIndex, fieldName, id } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return ApiResponse.badRequest("Invalid ID").send(res);
+    }
+
+    if (!req.file) {
+      return ApiResponse.badRequest("No file uploaded").send(res);
+    }
+
+    const allowedFields = ["registrationSlip", "FeeReceipt", "dpfForm"];
+
+    if (!allowedFields.includes(fieldName)) {
+      return ApiResponse.badRequest("Invalid field name").send(res);
+    }
+
+    const scholar = await Scholar.findById(id);
+
+    if (!scholar) {
+      return ApiResponse.success("Scholar not found").send(res);
+    }
+
+    if (!scholar.semesters[semesterIndex]) {
+      scholar.semesters[semesterIndex] = {};
+    }
+
+    scholar.semesters[semesterIndex][fieldName] = req.file.filename;
+
+    await scholar.save();
+
+    return ApiResponse.success(scholar, "File updated!").send(res);
+  } catch (error) {
+    console.log(error)
+    return ApiResponse.error(error.message).send(res);
+  }
+};
 
 exports.updateScholar = async (req, res) => {
   try {

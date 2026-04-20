@@ -6,25 +6,78 @@ import CustomButton from "./CustomButton";
 const BulkUploadModal = ({
   isOpen,
   onClose,
-  title,
-  uploadLabel,
-  columns,
   onUpload,
 }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [type, setType] = useState("general");
 
-  const sampleHeader = useMemo(() => columns.join(","), [columns]);
+  const columnsMap = {
+    general: [  "type",
+      "firstName",
+      "lastName",
+      "rollNo",
+      "enrollmentDate",
+      "supervisor",
+      "coSupervisor",
+      "email",
+      "phone",
+      "profile",
+      "courseWork",
+      "comprehensiveExamStatus",
+      "comprehensiveExamDate",
+      "topicRegistrationSeminar",
+      "dateRegistrationSeminar",
+      "datePresentation",
+      "stipendEnhancementStatus",
+      "stipendEnhancementDate",
+      "preSubmissionStatus",
+      "preSubmissionDate",
+      "openDefenseStatus",
+      "openDefenseDate"
+    ],
+    publication: ["scholar",
+      "type",
+      "title",
+      "name",
+      "category",
+      "impactFactor",
+      "scopusIndex",
+      "conferenceDate",
+      "conferenceVenue",
+      "applicationNo",
+      "dateOfFiled",
+      "dateOfFER",
+      "dateOfGrant",
+      "grantNo",
+      "publisher",
+      "status",
+      "communicationDate",
+      "isbn",
+      "volumeNo",
+      "articleNo",
+      "publishedYear",
+      "link"
+    ],
+    semester: ["semesterName",
+      "email",
+      "registrationSlip",
+      "FeeRiceipt",
+      "dpfForm"
+    ]
+  };
 
-  if (!isOpen) {
-    return null;
-  }
+  const sampleHeader = useMemo(
+    () => columnsMap[type].join(","),
+    [type]
+  );
+
+  if (!isOpen) return null;
 
   const handleClose = () => {
-    if (uploading) {
-      return;
-    }
+    if (uploading) return;
     setFile(null);
+    setType("general");
     onClose();
   };
 
@@ -36,7 +89,7 @@ const BulkUploadModal = ({
 
     try {
       setUploading(true);
-      await onUpload(file);
+      await onUpload(type, file);
       setFile(null);
       onClose();
     } finally {
@@ -49,12 +102,30 @@ const BulkUploadModal = ({
       <div className="bg-white rounded-lg p-8 w-[90%] max-w-3xl max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
         >
           <IoMdClose className="text-2xl" />
         </button>
 
-        <h2 className="text-2xl font-semibold mb-4">{title}</h2>
+        <h2 className="text-2xl font-semibold mb-4">
+          Bulk Upload
+        </h2>
+
+        <div className="mb-6">
+          <label className="block text-sm mb-2 font-medium">
+            Select Upload Type
+          </label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full border px-4 py-2 rounded-md"
+          >
+            <option value="general">General informations</option>
+            <option value="publication">Publications</option>
+            <option value="semester">Semesters</option>
+          </select>
+        </div>
+
         <p className="text-sm text-gray-600 mb-4">
           Upload a CSV file. The first row must contain these headers.
         </p>
@@ -69,8 +140,8 @@ const BulkUploadModal = ({
         <input
           type="file"
           accept=".csv,text/csv"
-          onChange={(event) => setFile(event.target.files?.[0] || null)}
-          className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          className="w-full px-4 py-3 border rounded-md"
         />
 
         {file && (
@@ -94,7 +165,7 @@ const BulkUploadModal = ({
             onClick={handleUpload}
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : uploadLabel}
+            {uploading ? "Uploading..." : `Upload ${type}`}
           </CustomButton>
         </div>
       </div>

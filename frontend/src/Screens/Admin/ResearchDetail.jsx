@@ -76,6 +76,7 @@ const ResearchDetail = ({id}) => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [scholarForm, setScholarForm] = useState(initialScholarForm);
   const [srcCommitteeForm, setSrcCommitteeForm] = useState([createSrcCommitteeEntry()]);
+  const [refresh, setRefresh] = useState("");
 
   const researcherId = new URLSearchParams(location.search).get("id") || id;
 
@@ -121,7 +122,7 @@ const ResearchDetail = ({id}) => {
   useEffect(() => {
     loadResearcher();
     loadFacultyOptions();
-  }, [researcherId]);
+  }, [researcherId, refresh]);
 
   const openEditModal = () => {
     if (!researcher) {
@@ -550,7 +551,7 @@ const ResearchDetail = ({id}) => {
         
 
         {previewTab === "semester" && (
-          <ScholarsSemesters scholar={researcher} />
+          <ScholarsSemesters scholar={researcher} setRefresh={setRefresh} />
         )}
       </div>
 
