@@ -10,6 +10,31 @@ import DeleteConfirm from "../components/DeleteConfirm";
 import { useParams } from "react-router-dom";
 
 const tabs = ["Journal", "Conference", "Book-Chapter", "Patent"];
+const publicationStatusOptions = [
+  "published",
+  "accepted",
+  "submitted",
+  "communicated",
+  "under review",
+  "filed",
+  "fer",
+  "grant",
+];
+const publicationCategoryOptions = ["SCI", "SCIE", "Scopus", "Other"];
+const scopusIndexOptions = ["yes", "no", "NA"];
+
+const formatDateInput = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().split("T")[0];
+};
 
 const ScholarsPublications = ({id}) => {
   const token = localStorage.getItem("userToken");
@@ -24,30 +49,32 @@ const ScholarsPublications = ({id}) => {
   if(!id)
     id=s_id.id;
 
-  useEffect(()=>{
-    const loadData=async ()=>{
-      try{
-        setLoading(true);
-        const response=await axiosWrapper.get(`/publication/${activeTab}/${id}`);
-        if(response.data.success){
-          // console.log(response.data.data)
-          setPublications(response.data.data);
-        }
-      }
-      catch(error){
-        console.log()
-      }
-      finally{
-        setLoading(false);
+  const loadData = async () => {
+    try{
+      setLoading(true);
+      const response=await axiosWrapper.get(`/publication/${activeTab}/${id}`);
+      if(response.data.success){
+        setPublications(Array.isArray(response.data.data) ? response.data.data : []);
+      } else {
+        setPublications([]);
       }
     }
+    catch(error){
+      setPublications([]);
+    }
+    finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(()=>{
     loadData();
-  },[activeTab]);
+  },[activeTab, id]);
 
   const currentData = publications || [];
 
   const openEditModalPublication = (item) => {
-    setPublicationForm(item);
+    setPublicationForm({ ...item });
     setShowPublicationModal(true);
   };
 
@@ -56,39 +83,53 @@ const ScholarsPublications = ({id}) => {
     setPublicationForm({});
   };
 
-  const addPublicationRow = async(e) => {
+  const addPublicationRow = async (e) => {
     e.preventDefault();
     try {
-      // console.log(publicationForm)
       toast.loading("Creating publication");
-      const response = await axiosWrapper.post(`/publication/`, publicationForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const payload = {
+        ...publicationForm,
+        scholar: id,
+        type: publicationForm.type || activeTab,
+      };
+      const response = await axiosWrapper.post(
+        `/publication/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       toast.dismiss();
       if (response.data.success) {
         toast.success(response.data.message);
+        setPublications((prev) =>
+          activeTab === payload.type ? [...prev, response.data.data] : prev
+        );
         setShowPublicationModal(false);
-        loading();
+        resetModal();
+        await loadData();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.dismiss();
-      toast.error(error.response?.data?.message || "Failed to create publication");
+      toast.error(
+        error.response?.data?.message || "Failed to create publication",
+      );
     }
   };
 
   const updatePublicationRow = (field, value) => {
     setPublicationForm((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
-  
-  const deletePublicationRow = async(id) => {
+
+  const deletePublicationRow = async (id) => {
     try {
       toast.loading("Deleting publication");
       const response = await axiosWrapper.delete(`/publication/${id}`, {
@@ -101,38 +142,50 @@ const ScholarsPublications = ({id}) => {
         toast.success(response.data.message);
         setShowPublicationModal(false);
         setIsDeleteConfirmOpen(false);
-        // loading();
+        setPublications((prev) => prev.filter((item) => item._id !== id));
+        await loadData();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       toast.dismiss();
-      console.log(error)
-      toast.error(error.response?.data?.message || "Failed to delete publication");
+      console.log(error);
+      toast.error(
+        error.response?.data?.message || "Failed to delete publication",
+      );
     }
   };
 
   const handleSubmit = async (e, id) => {
     e.preventDefault();
     try {
-      console.log(publicationForm)
       toast.loading("Updating publication");
-      const response = await axiosWrapper.put(`/publication/${id}`, publicationForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axiosWrapper.put(
+        `/publication/${id}`,
+        publicationForm,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       toast.dismiss();
       if (response.data.success) {
         toast.success(response.data.message);
+        setPublications((prev) =>
+          prev.map((item) => (item._id === id ? response.data.data : item))
+        );
         setShowPublicationModal(false);
-        loading();
+        resetModal();
+        await loadData();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       toast.dismiss();
-      toast.error(error.response?.data?.message || "Failed to update publication");
+      toast.error(
+        error.response?.data?.message || "Failed to update publication",
+      );
     }
   };
 
@@ -315,14 +368,58 @@ const ScholarsPublications = ({id}) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(activeTab==="Book-Chapter"? publicationFieldConfig["BookChapter"] : publicationFieldConfig[activeTab]).columns.map(([field, label, type]) => (
-                      <input
-                        key={field}
-                        type="text"
-                        placeholder={label}
-                        value={type==="date" ? new Date(publicationForm[field]).toLocaleDateString() : publicationForm[field]}
-                        onChange={(e) => updatePublicationRow(publicationForm._id, field, e.target.value)}
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      field === "status" ? (
+                        <select
+                          key={field}
+                          value={publicationForm[field] ?? ""}
+                          onChange={(e) => updatePublicationRow(field, e.target.value)}
+                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">{label}</option>
+                          {publicationStatusOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field === "category" ? (
+                        <select
+                          key={field}
+                          value={publicationForm[field] ?? ""}
+                          onChange={(e) => updatePublicationRow(field, e.target.value)}
+                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">{label}</option>
+                          {publicationCategoryOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field === "scopusIndex" ? (
+                        <select
+                          key={field}
+                          value={publicationForm[field] ?? ""}
+                          onChange={(e) => updatePublicationRow(field, e.target.value)}
+                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">{label}</option>
+                          {scopusIndexOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          key={field}
+                          type={type === "date" ? "date" : "text"}
+                          placeholder={label}
+                          value={type === "date" ? formatDateInput(publicationForm[field]) : publicationForm[field] ?? ""}
+                          onChange={(e) => updatePublicationRow(field, e.target.value)}
+                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      )
                     ))}
                   </div>
                 </div>

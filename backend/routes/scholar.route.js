@@ -11,7 +11,8 @@ const {
   generalBulkUploader,
   semesterBulkUploader,
   getScholar,
-  findScholar
+  findScholar,
+  addScholarByFaculty
 } = require("../controllers/scholar.controller");
 const Auth = require("../middlewares/auth.middleware");
 const mapFaculty = require("../middlewares/mapFaculty.middleware");
@@ -22,6 +23,7 @@ router.post("/", mapFaculty, createScholar);
 router.post("/bulk-upload", Auth, upload.single("file"), bulkUploadController);
 router.post("/general-bulk-upload", upload.single("file"), generalBulkUploader);
 router.post("/semester-bulk-upload", upload.single("file"), semesterBulkUploader);
+router.post("/by-faculty", Auth, mapFaculty, addScholarByFaculty);
 
 router.get("/", getAllScholars);
 router.get("/my-details", Auth, getScholar);

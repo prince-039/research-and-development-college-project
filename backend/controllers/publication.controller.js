@@ -10,7 +10,7 @@ exports.createPublication = async (req, res) => {
     const { title, type, scholar, name} = req.body;
 
     if (!title || !type || !scholar || !name) {
-      return ApiResponse.success("Title, type, scholar and name are required").send(res);
+      return ApiResponse.badRequest("Title, type, scholar and name are required").send(res);
     }
 
     const publication = new Publication(req.body);
@@ -18,7 +18,7 @@ exports.createPublication = async (req, res) => {
 
     return ApiResponse.success(saved, "Data Saved!").send(res);
   } catch (error) {
-    return ApiResponse.success(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -30,7 +30,7 @@ exports.getAllPublications = async (req, res) => {
 
     return ApiResponse.success(publications, "Data fetched").send(res);
   } catch (error) {
-    return ApiResponse.success(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -39,19 +39,19 @@ exports.getPublicationById = async (req, res) => {
     const { type, id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id) || !type) {
-      return ApiResponse.success("Wrong Request").send(res);
+      return ApiResponse.badRequest("Wrong Request").send(res);
     }
 
     const publication = await Publication.find({scholar : id, type})
       .populate("scholar", "firstName lastName rollNo");
 
     if (!publication) {
-      return ApiResponse.success("No Records").send(res);
+      return ApiResponse.notFound("No Records").send(res);
     }
 
     return ApiResponse.success(publication, "Data Fetched").send(res);
   } catch (error) {
-    return ApiResponse.success(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -60,7 +60,7 @@ exports.updatePublication = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.success("Wrong Request").send(res);
+      return ApiResponse.badRequest("Wrong Request").send(res);
     }
 
     const updated = await Publication.findByIdAndUpdate(id,
@@ -70,12 +70,12 @@ exports.updatePublication = async (req, res) => {
       .populate("scholar", "firstName lastName rollNo");
 
     if (!updated) {
-      return ApiResponse.success("Publication not found!").send(res);
+      return ApiResponse.notFound("Publication not found!").send(res);
     }
 
-    return ApiResponse.success(updated, `${type} updated.`).send(res);
+    return ApiResponse.success(updated, "Publication updated.").send(res);
   } catch (error) {
-    return ApiResponse.success(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 
@@ -85,18 +85,18 @@ exports.deletePublication = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return ApiResponse.success("Wrong Request").send(res);
+      return ApiResponse.badRequest("Wrong Request").send(res);
     }
 
     const deleted = await Publication.findByIdAndDelete(id);
 
     if (!deleted) {
-      return ApiResponse.success("Publication not found!").send(res);
+      return ApiResponse.notFound("Publication not found!").send(res);
     }
 
-    return ApiResponse.success(`${type} deleted successfully.`).send(res);
+    return ApiResponse.success(deleted, "Publication deleted successfully.").send(res);
   } catch (error) {
-    return ApiResponse.success(error.message).send(res);
+    return ApiResponse.error(error.message).send(res);
   }
 };
 

@@ -1,7 +1,8 @@
 import React from 'react'
 import CustomButton from '../components/CustomButton'
+import { Edit3 } from 'lucide-react'
 
-const ScholarsInfo = ({scholar, openEditModal}) => {
+const ScholarsInfo = ({scholar, openEditModal, openSrcCommitteeModal}) => {
 
     if(!scholar) return <div className='items-center mt-10 text-xl'>Loading...</div>
 // console.log(scholar)
@@ -37,7 +38,7 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                         <span className="font-medium"> {new Date(scholar.enrollmentDate).toLocaleDateString()}</span>
                     </p>
                     <p className="text-sm text-gray-500">Semester : 
-                        <span className="font-medium">{scholar.semester || " 1st"} </span> 
+                        <span className="font-medium"> {scholar.semesters.length || " 1st"} </span> 
                     </p>
                     <CustomButton onClick={openEditModal}>Edit</CustomButton>
                 </div>
@@ -53,7 +54,11 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                 <div className='grid grid-cols-[70%_30%] gap-2'>
                     <div>
                         <div className="bg-gray-50 p-4 m-1 rounded-xl">
-                            <h3 className="font-semibold text-gray-700 mb-3">
+                            <p>
+                                <h3 className='text-gray-600 inline-block b-2'>Course Work Completed :</h3>
+                                <span className='p-2'>{scholar.courseWork?.status}</span>
+                            </p>
+                            <h3 className="font-medium text-gray-600 mb-2 mt-1">
                                 Comprehensive Examination
                             </h3>
                             <p>
@@ -99,7 +104,7 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                             <h3 className="font-semibold text-gray-700">
                                 Progress Status
                             </h3>
-                            <div className='flex justify-between'>
+                            <div className='grid grid-cols-2 border-b pb-2'>
                                 <p className="text-gray-500">Stipend Enhancement:  
                                     <span className="font-medium text-black"> {scholar.stipendEnhancementSeminar?.status || " NA"}</span>
                                 </p>
@@ -110,34 +115,39 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                                 </p>
                                 )}
                             </div>
-
-                            <p>
-                                <span className="text-gray-500">Pre Submission: </span>
-                                <span className="font-medium">{scholar.preSubmissionSeminar?.status || "NA"}</span>
-                            </p>
-
-                            {scholar.preSubmissionSeminar?.status === "yes" && (
+                            <div className='grid grid-cols-2 border-b pb-2'>
                                 <p>
-                                    <span className="text-gray-500">Date: </span>
-                                    <span className="font-medium">{new Date(scholar.preSubmissionSeminar.date).toLocaleDateString()}</span>
+                                    <span className="text-gray-500">Pre Submission: </span>
+                                    <span className="font-medium">{scholar.preSubmissionSeminar?.status || "NA"}</span>
                                 </p>
-                            )}
 
-                            <p>
-                                <span className="text-gray-500">Open Defense: </span>
-                                <span className="font-medium">{scholar.openDefense?.status || "NA"}</span>
-                            </p>
-
-                            {scholar.openDefense?.status === "yes" && (
+                                {scholar.preSubmissionSeminar?.status === "yes" && (
+                                    <p>
+                                        <span className="text-gray-500">Date: </span>
+                                        <span className="font-medium">{new Date(scholar.preSubmissionSeminar.date).toLocaleDateString()}</span>
+                                    </p>
+                                )}
+                            </div>
+                            <div className='grid grid-cols-2 border-b pb-2'>
                                 <p>
-                                    <span className="text-gray-500">Date: </span>
-                                    <span className="font-medium">{new Date(scholar.openDefense.date).toLocaleDateString()}</span>
+                                    <span className="text-gray-500">Open Defense: </span>
+                                    <span className="font-medium">{scholar.openDefense?.status || "NA"}</span>
                                 </p>
-                            )}
+
+                                {scholar.openDefense?.status === "yes" && (
+                                    <p>
+                                        <span className="text-gray-500">Date: </span>
+                                        <span className="font-medium">{new Date(scholar.openDefense.date).toLocaleDateString()}</span>
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className=" p-6 rounded-2xl border border-gray-300 max-h-100 overflow-y-scroll no-scrollbar">
-                        <h2 className="text-lg font-semibold mb-4">SRC Committee</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold">SRC Committee</h2>
+                            <p onClick={openSrcCommitteeModal}><Edit3 size={16} className='text-blue-700 cursor-pointer bg-gray-200 h-8 w-8 p-2 rounded-lg hover:bg-blue-200 transition' /></p>
+                        </div>
                         <div className=" pl-2 space-y-4 text-sm text-gray-500">
                             {scholar.srcCommittee?.slice()
                             .map((src, index) => (
@@ -151,6 +161,9 @@ const ScholarsInfo = ({scholar, openEditModal}) => {
                                     <p className='ml-6' >{src.designation}</p>
                                 </div>
                             ))}
+                            {(!scholar.srcCommittee || scholar.srcCommittee.length === 0) && (
+                                <p>No SRC committee members added.</p>
+                            )}
                         </div>
                     </div>
                 </div>
