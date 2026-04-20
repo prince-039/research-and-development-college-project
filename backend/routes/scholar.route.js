@@ -8,6 +8,8 @@ const {
   updateScholar,
   deleteScholar,
   bulkUploadController,
+  generalBulkUploader,
+  semesterBulkUploader,
   getScholar,
   findScholar,
   addScholarByFaculty
@@ -19,6 +21,8 @@ const upload = require("../middlewares/multer.middleware");
 
 router.post("/", mapFaculty, createScholar);
 router.post("/bulk-upload", Auth, upload.single("file"), bulkUploadController);
+router.post("/general-bulk-upload", upload.single("file"), generalBulkUploader);
+router.post("/semester-bulk-upload", upload.single("file"), semesterBulkUploader);
 router.post("/by-faculty", Auth, mapFaculty, addScholarByFaculty);
 
 router.get("/", getAllScholars);

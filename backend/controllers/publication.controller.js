@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const Publication = require("../models/publication.model");
 const ApiResponse = require("../utils/ApiResponse");
+const { parseCsvFile } = require("../utils/csv.utils");
+const Scholar = require("../models/scholar.model");
+const fs = require("fs");
 
 exports.createPublication = async (req, res) => {
   try {
@@ -94,5 +97,130 @@ exports.deletePublication = async (req, res) => {
     return ApiResponse.success(deleted, "Publication deleted successfully.").send(res);
   } catch (error) {
     return ApiResponse.error(error.message).send(res);
+  }
+};
+
+
+exports.publicationBulkUploader = async (req, res) => {
+  try {
+    const filePath = req.file.path;
+
+    const rows = await parseCsvFile(filePath);
+
+    if (!rows.length) {
+      return res.status(400).json({
+        success: false,
+        message: "CSV is empty",
+      });
+    }
+
+    const publicationsToInsert = [];
+    const errors = [];
+
+    // 🔥 preload scholars (optimization)
+    const scholars = await Scholar.find({});
+    const scholarMap = new Map();
+
+    scholars.forEach((s) => {
+      scholarMap.set(s.email.toLowerCase(), s);
+    });
+
+    for (let row of rows) {
+      try {
+        if (!row.email || !row.type || !row.title) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Missing required fields (email/type/title)",
+          });
+          continue;
+        }
+
+        const scholar = scholarMap.get(row.email.toLowerCase());
+
+        if (!scholar) {
+          errors.push({
+            row: row.__rowNumber,
+            message: "Scholar not found",
+          });
+          continue;
+        }
+
+        // 🧠 Create publication object
+        const publicationObj = {
+          scholar: scholar._id,
+
+          type: row.type,
+          title: row.title,
+
+          name: row.name || "NA",
+
+          category: row.category || "Other",
+
+          impactFactor: row.impactfactor ? Number(row.impactfactor) : 0,
+
+          scopusIndex: row.scopusindex || "NA",
+
+          conferenceDate: row.conferencedate || null,
+          conferenceVenue: row.conferencevenue || "NA",
+
+          applicationNo: row.applicationno
+            ? Number(row.applicationno)
+            : null,
+
+          dateOfFiled: row.dateoffiled || null,
+          dateOfFER: row.dateoffer || null,
+          dateOfGrant: row.dateofgrant || null,
+
+          grantNo: row.grantno ? Number(row.grantno) : null,
+
+          publisher: row.publisher || "NA",
+
+          status: row.status || "communicated",
+
+          communicationDate: row.communicationdate || null,
+
+          isbn: row.isbn || "NA",
+
+          volumeNo: row.volumeno ? Number(row.volumeno) : null,
+
+          articleNo: row.articleno ? Number(row.articleno) : null,
+
+          publishedYear: row.publishedyear || "NA",
+
+          link: row.link || "NA",
+        };
+
+        publicationsToInsert.push(publicationObj);
+
+      } catch (err) {
+        errors.push({
+          row: row.__rowNumber,
+          message: err.message,
+        });
+      }
+    }
+
+    // 🚀 insert
+    if (publicationsToInsert.length > 0) {
+      await Publication.insertMany(publicationsToInsert, {
+        ordered: false,
+      });
+    }
+
+    fs.unlinkSync(filePath);
+
+    return res.status(200).json({
+      success: true,
+      inserted: publicationsToInsert.length,
+      failed: errors.length,
+      errors,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Publication bulk upload failed",
+      error: error.message,
+    });
   }
 };
