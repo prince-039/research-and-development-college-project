@@ -2,34 +2,56 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const facultyDetailsSchema = new mongoose.Schema(
   {
+    employeeId: {
+      type: Number,
+    },
     firstName: {
       type: String,
       required: true,
     },
     lastName: {
       type: String,
+      required: true,
     },
     email: {
       type: String,
-      unique: true,
-      trim:true,
       required: true,
     },
     phone: {
       type: String,
+      required: false,
     },
     profile: {
       type: String,
     },
     address: {
       type: String,
+      required: false,
+    },
+    city: {
+      type: String,
+      required: false,
+    },
+    state: {
+      type: String,
+      required: false,
+    },
+    pincode: {
+      type: String,
+      required: false,
+    },
+    country: {
+      type: String,
+      required: false,
     },
     gender: {
       type: String,
+      required: true,
       enum: ["male", "female", "other"],
     },
     dob: {
       type: Date,
+      required: false,
     },
     designation: {
       type: String,
@@ -37,11 +59,20 @@ const facultyDetailsSchema = new mongoose.Schema(
     },
     joiningDate: {
       type: Date,
+      required: false,
+    },
+    salary: {
+      type: Number,
     },
     status: {
       type: String,
       enum: ["active", "inactive"],
       default: "active",
+    },
+    emergencyContact: {
+      name: String,
+      relationship: String,
+      phone: String,
     },
     bloodGroup: {
       type: String,
@@ -50,14 +81,11 @@ const facultyDetailsSchema = new mongoose.Schema(
     branchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",
+      required: false,
     },
     password: {
       type: String,
-      required: true,
-    },
-    publications: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Publication",
+      required: false,
     },
   },
   { timestamps: true }
