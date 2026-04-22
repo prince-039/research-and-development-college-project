@@ -6,6 +6,7 @@ import CustomButton from "./CustomButton";
 const BulkUploadModal = ({
   isOpen,
   onClose,
+  columns,
   onUpload,
 }) => {
   const [file, setFile] = useState(null);
@@ -68,7 +69,7 @@ const BulkUploadModal = ({
   };
 
   const sampleHeader = useMemo(
-    () => columnsMap[type].join(","),
+    () => (columns ? columns : columnsMap[type]).join(","),
     [type]
   );
 
@@ -111,7 +112,7 @@ const BulkUploadModal = ({
           Bulk Upload
         </h2>
 
-        <div className="mb-6">
+        {!columns && <div className="mb-6">
           <label className="block text-sm mb-2 font-medium">
             Select Upload Type
           </label>
@@ -124,7 +125,7 @@ const BulkUploadModal = ({
             <option value="publication">Publications</option>
             <option value="semester">Semesters</option>
           </select>
-        </div>
+        </div>}
 
         <p className="text-sm text-gray-600 mb-4">
           Upload a CSV file. The first row must contain these headers.
@@ -165,7 +166,7 @@ const BulkUploadModal = ({
             onClick={handleUpload}
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : `Upload ${type}`}
+            {uploading ? "Uploading..." : "Upload "}
           </CustomButton>
         </div>
       </div>

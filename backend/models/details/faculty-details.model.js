@@ -45,7 +45,7 @@ const facultyDetailsSchema = new mongoose.Schema(
     },
     bloodGroup: {
       type: String,
-      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", ""],
     },
     branchId: {
       type: mongoose.Schema.Types.ObjectId,
