@@ -244,13 +244,9 @@ const ScholarFinder = ({activeTab}) => {
                     >
                       <td className="px-6 py-4 border-b">
                         <img
-                          src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                          src={student.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${student.profile}` : "user.png"}
                           alt={`${student.firstName}'s profile`}
                           className="w-12 h-12 object-cover rounded-full"
-                          onError={(e) => {
-                            e.target.src =
-                              "https://images.unsplash.com/photo-1744315900478-fa44dc6a4e89?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-                          }}
                         />
                       </td>
                       <td className="px-6 py-4 border-b">
@@ -307,23 +303,23 @@ const ScholarFinder = ({activeTab}) => {
 
               <form onSubmit={addHandleSubmit} className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="text" placeholder="Scholar First Name" value={scholarForm?.firstName} onChange={(e) => handleScholarChange("firstName", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" placeholder="Scholar First Name" value={scholarForm?.firstName} onChange={(e) => handleScholarChange("firstName", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                   <input type="text" placeholder="Scholar Last Name" value={scholarForm?.lastName} onChange={(e) => handleScholarChange("lastName", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  <input type="text" placeholder="Roll number" value={scholarForm.rollNo} onChange={(e) => handleScholarChange("rollNo", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" placeholder="Registration number" value={scholarForm.rollNo} onChange={(e) => handleScholarChange("rollNo", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                   <input type="text" placeholder="Department" value={scholarForm.department} onChange={(e) => handleScholarChange("department", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   <select value={scholarForm.type} onChange={(e) => handleScholarChange("type", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Regular">Regular</option>
                     <option value="Part-Time">Part-Time</option>
                   </select>
-                  <input type="text" placeholder="Enrollment Date(dd/mm/yyyy)" value={scholarForm.enrollmentDate} onChange={(e) => handleScholarChange("enrollmentDate", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  <input type="email" placeholder="Email" value={scholarForm.email} onChange={(e) => handleScholarChange("email", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="date" placeholder="Enrollment Date" value={scholarForm.enrollmentDate} onChange={(e) => handleScholarChange("enrollmentDate", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                  <input type="email" placeholder="Email" value={scholarForm.email} onChange={(e) => handleScholarChange("email", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                   <select value={scholarForm.association} onChange={(e) => handleScholarChange("association", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled>Assosiated As</option>
                     <option value="supervisor">Supervisor</option>
                     <option value="coSupervisor">Co-Supervisor</option>
                   </select>
-                  <input type="text" placeholder="Phone" value={scholarForm.phone} onChange={(e) => handleScholarChange("phone", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  {scholarForm.association==="coSupervisor" && <input type="email" placeholder="Supervisor Email" value={scholarForm.supervisor} onChange={(e) => handleScholarChange("supervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />}
+                  <input type="text" placeholder="Phone" value={scholarForm.phone} onChange={(e) => handleScholarChange("phone", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                  {scholarForm.association==="coSupervisor" && <input type="email" placeholder="Supervisor Email" value={scholarForm.supervisor} onChange={(e) => handleScholarChange("supervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/>}
                   <input type="file" placeholder="Profile image" value={scholarForm.profile} onChange={(e) => handleScholarChange("profile", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
 

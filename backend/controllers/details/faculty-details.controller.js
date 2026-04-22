@@ -41,7 +41,7 @@ const getAllFacultyController = async (req, res) => {
       .populate("branchId", "name branchId")
       .select("-__v -password");
     if (!users || users.length === 0) {
-      return ApiResponse.notFound("No Faculty Found").send(res);
+      return ApiResponse.success([], "No Faculty Found").send(res);
     }
     return ApiResponse.success(users, "Faculty Details Found!").send(res);
   } catch (error) {
@@ -90,7 +90,6 @@ const registerFacultyController = async (req, res) => {
   try {
     const { email, phone, password } = req.body;
     const profile = req.file?.filename;
-
     if (!profile) {
       return ApiResponse.badRequest("Profile photo is required").send(res);
     }
@@ -118,11 +117,8 @@ const registerFacultyController = async (req, res) => {
       ).send(res);
     }
 
-    const employeeId = generateEmployeeId();
-
     const user = await facultyDetails.create({
       ...req.body,
-      employeeId,
       profile,
       password,
     });
@@ -170,39 +166,16 @@ const bulkUploadFacultyController = async (req, res) => {
         const dob = String(row.dob || "").trim();
         const designation = String(row.designation || "").trim();
         const joiningDate = String(row.joiningdate || "").trim();
-        const salary = Number(row.salary || 0);
-        const branchInput = row.branchid || row.branch || row.branchname;
         const address = String(row.address || "").trim();
-        const city = String(row.city || "").trim();
-        const state = String(row.state || "").trim();
-        const pincode = String(row.pincode || "").trim();
-        const country = String(row.country || "").trim();
         const bloodGroup = String(row.bloodgroup || "").trim();
         const status = String(row.status || "active").trim().toLowerCase();
-        const emergencyContact = {
-          name: String(row.emergencycontactname || "").trim(),
-          relationship: String(
-            row.emergencycontactrelationship || ""
-          ).trim(),
-          phone: String(row.emergencycontactphone || "").trim(),
-        };
 
         if (
           !firstName ||
           !lastName ||
           !email ||
-          !phone ||
           !gender ||
-          !dob ||
-          !designation ||
-          !joiningDate ||
-          !salary ||
-          !branchInput ||
-          !address ||
-          !city ||
-          !state ||
-          !pincode ||
-          !country
+          !designation
         ) {
           throw new Error(
             "Missing required fields. Required: firstName, lastName, email, phone, gender, dob, designation, joiningDate, salary, branch, address, city, state, pincode, country"
@@ -213,7 +186,7 @@ const bulkUploadFacultyController = async (req, res) => {
           throw new Error("Invalid email format");
         }
 
-        if (!/^\d{10}$/.test(phone)) {
+        if (phone && !/^\d{10}$/.test(phone)) {
           throw new Error("Phone number must be exactly 10 digits");
         }
 
@@ -225,22 +198,11 @@ const bulkUploadFacultyController = async (req, res) => {
           throw new Error("Status must be active or inactive");
         }
 
-        const branch = await resolveBranch(branchInput);
-        if (!branch) {
-          throw new Error(`Branch not found for "${branchInput}"`);
-        }
-
         if (seenEmails.has(email.toLowerCase())) {
           throw new Error("Duplicate email in uploaded file");
         }
 
-        if (seenPhones.has(phone)) {
-          throw new Error("Duplicate phone number in uploaded file");
-        }
-
-        const existingFaculty = await facultyDetails.findOne({
-          $or: [{ email }, { phone }],
-        });
+        const existingFaculty = await facultyDetails.findOne({ email });
         if (existingFaculty) {
           throw new Error(
             "Faculty with the same email or phone number already exists"
@@ -252,33 +214,25 @@ const bulkUploadFacultyController = async (req, res) => {
           firstName,
           lastName,
           email,
-          phone,
+          phone: phone || "",
           profile: "",
           address,
-          city,
-          state,
-          pincode,
-          country,
           gender,
           dob,
           designation,
           joiningDate,
-          salary,
           status,
-          emergencyContact,
           bloodGroup: bloodGroup || undefined,
-          branchId: branch._id,
           password: "faculty123",
         });
 
         inserted.push({
           _id: createdFaculty._id,
-          employeeId: createdFaculty.employeeId,
           email: createdFaculty.email,
         });
         seenEmails.add(email.toLowerCase());
-        seenPhones.add(phone);
       } catch (rowError) {
+        console.log(rowError)
         errors.push({
           row: row.__rowNumber,
           message: rowError.message || "Invalid row",
