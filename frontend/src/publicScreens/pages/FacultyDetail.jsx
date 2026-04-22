@@ -22,7 +22,7 @@ const FacultyDetail = () => {
 
     loadBio();
   }, []);
-console.log(faculty)
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-orange-300 py-6 text-center">
@@ -42,7 +42,7 @@ console.log(faculty)
       <div className="max-w-5xl mx-auto mt-6 bg-white shadow p-6">
         <div className="flex flex-col md:flex-row gap-6 bg-orange-500 p-6 rounded">
           <img
-            src={`http://localhost:8080/media/${faculty?.profile}` || `https://api.dicebear.com/7.x/avataaars/svg?seed=${faculty?.firstName}`}
+            src={faculty?.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${faculty?.profile}` : "../user.png"}
             alt={faculty?.firstName}
             className="w-40 h-40 object-cover rounded"
           />
@@ -55,9 +55,9 @@ console.log(faculty)
             <p>{faculty?.department}</p>
 
             <div className="mt-3 text-sm space-y-1">
-              <p>📞 {faculty?.phone}</p>
+              <p>📞 {faculty?.phone || "-"}</p>
               <p>📧 {faculty?.email}</p>
-              <p>🏢 {faculty?.office}</p>
+              <p>🏢 {faculty?.office || "-"}</p>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@ console.log(faculty)
       {/* Bio Section */}
       <div className="max-w-5xl mx-auto mt-6 bg-white shadow p-6">
         <h2 className="text-xl font-semibold mb-4 tracking-wide">
-          {faculty?.firstName +" " + faculty?.lastName}
+          Publications & Research Areas
         </h2>
 
         <p className="text-gray-700 leading-relaxed whitespace-pre-line">

@@ -27,23 +27,30 @@ const ScholarsSemesters = ({scholar, setRefresh}) => {
   const currentSemester = getCurrentSemester(scholar.enrollmentDate);
 
   const initializeSemester = async()=>{
-    const getSession = () => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      let startYear, endYear;
+   const getSession = () => {
+  if (!scholar.enrollmentDate || !activeSem) return "";
 
-      if (month < 6) {
-        startYear = year - 1;
-        endYear = year;
-      } else {
-        startYear = year;
-        endYear = year + 1;
-      }
-      const academic = `${startYear}-${String(endYear).slice(-2)}`;
+  const start = new Date(scholar.enrollmentDate);
 
-      return academic;
-    };
+  // 🔥 Add months based on semester
+  const semDate = new Date(start);
+  semDate.setMonth(start.getMonth() + (activeSem - 1) * 6);
+
+  const year = semDate.getFullYear();
+  const month = semDate.getMonth();
+
+  let startYear, endYear;
+
+  if (month < 6) {
+    startYear = year - 1;
+    endYear = year;
+  } else {
+    startYear = year;
+    endYear = year + 1;
+  }
+
+  return `${startYear}-${String(endYear).slice(-2)}`;
+};
     const sem=["Autumn Semester ", "Spring Semester "];
     try{
       toast.loading("Geting semester...");

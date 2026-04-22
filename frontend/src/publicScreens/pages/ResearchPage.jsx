@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BookOpenText, Building, Mail, Phone } from "lucide-react";
 
 const Research = () => {
-  const [activeTab, setActiveTab] = useState("scholars");
+  const [activeTab, setActiveTab] = useState("Regular");
   const [openIndex, setOpenIndex] = useState(-1);
   const [search, setSearch] = useState("");
   const [scholars, setScholars] = useState([]);
@@ -32,15 +32,32 @@ const Research = () => {
     return name.toLowerCase().includes(search.toLowerCase())
   });
 
+  const researchScholars = useMemo(
+    () =>
+      filteredScholars.filter(
+        (item) => item.type === activeTab
+      ),
+    [activeTab, filteredScholars]
+  );
+
   return (
     <div className="bg-gray-100 px-10 py-4">
-      <h2 className="text-center text-3xl font-semibold py-4 mb-2">Our Research Scholars</h2>
+      <h2 className="text-center text-3xl font-semibold py-2 ">Our Research Scholars</h2>
+      <div className="flex gap-2 justify-center mb-4">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="px-4 py-2 border rounded-full focus:outline-none focus:ring-1 focus:ring-orange-400"
+        />
+      </div>
       <div className="mb-6 flex justify-center gap-6 text-2xl font-medium">
         <button
           type="button"
-          onClick={() => setActiveTab("scholars")}
+          onClick={() => setActiveTab("Regular")}
           className={
-            activeTab === "scholars"
+            activeTab === "Regular"
               ? "font-semibold text-orange-400 underline"
               : ""
           }
@@ -49,9 +66,9 @@ const Research = () => {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("partTime")}
+          onClick={() => setActiveTab("Part-Time")}
           className={
-            activeTab === "partTime"
+            activeTab === "Part-Time"
               ? "font-semibold text-orange-400 underline"
               : ""
           }
@@ -60,16 +77,17 @@ const Research = () => {
         </button>
       </div>
 
-      {activeTab === "scholars" && (
-        <div className="mx-auto max-w-6xl rounded bg-white p-4 shadow">
-          <div className="grid gap-6 md:grid-cols-2">
-            {filteredScholars.map((researcher) => (
+      {activeTab && (
+        <div className="mx-auto rounded bg-gray-50 p-4 shadow">
+          {researchScholars.length===0 && <p className="text-center text-lg">No records found!</p> }
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {researchScholars.map((researcher) => (
             <div
               key={researcher._id}
               className="flex gap-4 rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md"
             >
               <img
-                src={researcher.profile || `https://api.dicebear.com/7.x/avataaars/svg?seed=${researcher.name}`}
+                src={process.env.REACT_APP_MEDIA_LINK/researcher?.profile || "user.png"}
                 alt={researcher.name}
                 className="h-20 w-20 rounded-full object-cover"
               />
@@ -86,13 +104,13 @@ const Research = () => {
 
                 <div className="mt-2 space-y-1 text-sm text-gray-700">
                   <p>
-                    <BookOpenText className="inline-block" size={15} /> {researcher.thesis}
+                    <BookOpenText className="inline-block" size={15} /> {researcher.seminar?.topic || "NA"}
                   </p>
                   <p>
                     <Mail className="inline-block" size={15} /> {researcher.email}
                   </p>
                   <p>
-                    <Phone className="inline-block" size={15} /> {researcher.phone}
+                    <Phone className="inline-block" size={15} /> {researcher.phone || "-"}
                   </p>
                 </div>
 

@@ -14,7 +14,7 @@ const FacultySection = () => {
       try {
         const response = await axiosWrapper.get("/faculty/public");
         if (response.data.success) {
-          console.log(response.data.data)
+          // console.log(response.data.data)
           setDynamicFaculty(response.data.data);
         }
       } catch (error) {
@@ -38,7 +38,7 @@ const FacultySection = () => {
       research: item.branchId?.name
         ? `Branch: ${item.branchId.name}`
         : "Faculty details added from admin panel.",
-      img: item.profile ? `${mediaBaseUrl}/media/${item.profile}` : "",
+      profile: item.profile,
     }));
 
     return [...mappedDynamicFaculty];
@@ -59,20 +59,21 @@ const FacultySection = () => {
         <input
           type="text"
           placeholder="Search"
-          className="w-full rounded-full border px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 md:w-1/3"
+          className="w-full rounded-full border px-4 py-2 outline-none focus:ring-1 focus:ring-orange-400 md:w-1/3"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {filteredFaculty.length===0 && <p className="text-center text-lg">No records found!</p> }
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredFaculty.map((facultyItem) => (
           <div
             key={facultyItem.id}
             className="flex gap-4 rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md"
           >
             <img
-              src={facultyItem.img || "https://via.placeholder.com/100"}
+              src={facultyItem.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${facultyItem.profile}` : "user.png"}
               alt={facultyItem.name}
               className="h-20 w-20 rounded-full object-cover"
             />
@@ -92,14 +93,12 @@ const FacultySection = () => {
                   <Mail className="inline-block" size={15} /> {facultyItem.email}
                 </p>
                 <p>
-                  <Phone className="inline-block" size={15} /> {facultyItem.phone}
+                  <Phone className="inline-block" size={15} /> {facultyItem.phone || "-"}
                 </p>
                 <p>
-                  <Building className="inline-block" size={15} /> {facultyItem.office}
+                  <Building className="inline-block" size={15} /> {facultyItem.address || "-"}
                 </p>
               </div>
-
-              <p className="mt-2 text-sm text-gray-600">{facultyItem.research}</p>
             </div>
           </div>
         ))}

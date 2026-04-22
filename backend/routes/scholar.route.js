@@ -13,18 +13,20 @@ const {
   findScholar,
   addScholarByFaculty,
   updateSemester,
-  initializeSemester
+  initializeSemester,
+  changePassword
 } = require("../controllers/scholar.controller");
 const Auth = require("../middlewares/auth.middleware");
 const mapFaculty = require("../middlewares/mapFaculty.middleware");
 const upload = require("../middlewares/multer.middleware");
 
 
-router.post("/", mapFaculty, createScholar);;
+router.post("/", mapFaculty, createScholar);
 router.post("/general-bulk-upload", Auth, upload.single("file"), generalBulkUploader);
 router.post("/semester-bulk-upload", Auth, upload.single("file"), semesterBulkUploader);
 router.post("/by-faculty", Auth, mapFaculty, addScholarByFaculty);
 router.post("/semester", Auth, initializeSemester);
+router.post("/change-password", Auth, changePassword);
 
 router.get("/", getAllScholars);
 router.get("/my-details", Auth, getScholar);

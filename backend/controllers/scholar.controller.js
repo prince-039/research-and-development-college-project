@@ -30,7 +30,7 @@ exports.createScholar = async (req, res) => {
     if (existing) {
       return ApiResponse.success("Scholar with this roll number already exists").send(res);
     }
-    const password=firstName+"123";
+    const password="student123";
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -48,6 +48,52 @@ exports.createScholar = async (req, res) => {
 
   } catch (error) {
     return ApiResponse.error(error.message).send(res);
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.userId;
+
+    if (!currentPassword || !newPassword) {
+      return ApiResponse.badRequest(
+        "Current password and new password are required"
+      ).send(res);
+    }
+
+    if (newPassword.length < 8) {
+      return ApiResponse.badRequest(
+        "New password must be at least 8 characters long"
+      ).send(res);
+    }
+
+    const user = await Scholar.findById(userId).select("+password");
+    if (!user) {
+      return ApiResponse.notFound("User not found").send(res);
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return ApiResponse.unauthorized("Current password is incorrect").send(
+        res
+      );
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await Scholar.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+    });
+
+    return ApiResponse.success(null, "Password updated successfully").send(res);
+  } catch (error) {
+    console.error("Update Password Error: ", error);
+    return ApiResponse.internalServerError().send(res);
   }
 };
 
@@ -221,9 +267,9 @@ exports.getScholarById = async (req, res) => {
     }
 
     const scholar = await Scholar.findById(id)
-      .populate("supervisor", "firstName lastName")
-      .populate("coSupervisor", "firstName lastName")
-      .populate("srcCommittee.member", "firstName lastName");
+      .populate("supervisor", "firstName lastName email")
+      .populate("coSupervisor", "firstName lastName email")
+      .populate("srcCommittee.member", "firstName lastName email");
 
     if (!scholar) {
       return ApiResponse.success("No Record!").send(res);

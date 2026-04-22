@@ -240,10 +240,7 @@ const Research = () => {
                   >
                     <div className="flex gap-4">
                       <img
-                        src={
-                          researcher.profile ||
-                          `https://api.dicebear.com/7.x/adventurer/svg?seed=${researcher.firstName}`
-                        }
+                        src={researcher.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${researcher.profile}` : "user.png"}
                         alt={researcher.firstName}
                         className="h-20 w-20 rounded-full object-cover bg-gray-100"
                       />
@@ -318,7 +315,7 @@ const Research = () => {
                 <input type="date" placeholder="Enrollment Date" value={scholarForm.enrollmentDate} onChange={(e) => handleScholarChange("enrollmentDate", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="email" placeholder="Email" value={scholarForm.email} onChange={(e) => handleScholarChange("email", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="text" placeholder="Phone" value={scholarForm.phone} onChange={(e) => handleScholarChange("phone", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="email" placeholder="Supervisor Email" value={scholarForm.supervisor} onChange={(e) => handleScholarChange("supervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="email" placeholder="Supervisor Email" value={scholarForm.supervisor.email} onChange={(e) => handleScholarChange("supervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="email" placeholder="Co-Supervisor Email" value={scholarForm.coSupervisor} onChange={(e) => handleScholarChange("coSupervisor", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="file" placeholder="Profile image" value={scholarForm.profile} onChange={(e) => handleScholarChange("profile", e.target.value)} className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>

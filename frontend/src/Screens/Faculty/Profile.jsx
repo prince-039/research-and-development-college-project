@@ -10,7 +10,7 @@ const Profile = ({ profileData }) => {
   const emergencyContact = profileData.emergencyContact || {};
   const profileImage = profileData.profile
     ? `${process.env.REACT_APP_MEDIA_LINK}/${profileData.profile}`
-    : "https://via.placeholder.com/160?text=Profile";
+    : "../user.png";
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";

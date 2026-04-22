@@ -7,7 +7,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import { publicationFieldConfig } from "../utils/researchPublicationConfig";
 import { Edit3, Trash2 } from "lucide-react";
 import DeleteConfirm from "../components/DeleteConfirm";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 const tabs = ["Journal", "Conference", "Book-Chapter", "Patent"];
 const publicationStatusOptions = [
@@ -45,6 +45,11 @@ const ScholarsPublications = ({id}) => {
   const [publicationForm, setPublicationForm] =useState({});
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen]=useState(false);
   const s_id=useParams();
+  const location = useLocation();
+  const publicRoutes = ["/researcher-details", "/faculty-details"];
+  const isPublicView = publicRoutes.some(route =>
+    location.pathname.startsWith(route)
+  );
   
   if(!id)
     id=s_id.id;
@@ -192,25 +197,25 @@ const ScholarsPublications = ({id}) => {
   return (<>
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between">
-      <div className="flex gap-4 mb-6 border-b pb-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg font-medium transition 
-              ${
-                activeTab === tab
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-        <CustomButton className="max-h-fit mr-10" type="button" onClick={() => openEditModalPublication({type : activeTab})}>
+        <div className="flex gap-4 mb-6 border-b pb-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg font-medium transition 
+                ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-200"
+                }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {!isPublicView && token && <CustomButton className="max-h-fit mr-10" type="button" onClick={() => openEditModalPublication({type : activeTab})}>
           Add {activeTab}
-        </CustomButton>
+        </CustomButton>}
       </div>
 
       {/* Table */}
@@ -242,7 +247,7 @@ const ScholarsPublications = ({id}) => {
               <th className="p-3">Article No</th>
               <th className="p-3">Publish Year</th>
               <th className="p-3">Link</th>
-              <th className="p-3">Action </th>
+              {!isPublicView && token && <th className="p-3">Action </th>}
             </tr>
           </thead>
 
@@ -323,7 +328,7 @@ const ScholarsPublications = ({id}) => {
                       "NA"
                     )}
                   </td>
-                  <td className="p-2">
+                  {!isPublicView && token && <td className="p-2">
                     <Edit3 className="inline-block mx-1 hover:text-blue-400 cursor-pointer"
                       size={16}
                       onClick={()=> openEditModalPublication(item)}
@@ -332,7 +337,7 @@ const ScholarsPublications = ({id}) => {
                       size={18} 
                       onClick={() => setIsDeleteConfirmOpen(item._id)}
                     />
-                  </td>
+                  </td>}
                 </tr>
               ))
             )}

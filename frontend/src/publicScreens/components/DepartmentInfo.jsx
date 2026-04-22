@@ -23,13 +23,20 @@ const DepartmentInfo = () => {
         To train young minds and to equip them with the best possible technical knowledge to meet the current and future demands of the industry, academia & research. To create infrastructure, motivation and culture for the state of the art research work in the area of Computer Science & Information Technology.
       </p>
       <h2 className="text-2xl font-semibold mb-2 ml-6">Head of Department</h2>
-      <div className="ml-8">
-        <h3 className="text-lg font-semibold mb-2 ">
-          Dr. Dilip Kumar Shaw
-        </h3>
-        <p>Phone(HOD Office) : NA</p>
-        <p>Email : hod.cse@nitjsr.ac.in</p>
-        <p>Fax : NA</p>
+      <div className="flex gap-4 rounded-xl p-2 ml-6">
+        <img src="HOD_Sir.png" alt="HOD Sir"
+          className="h-30 w-20 rounded-full object-cover"
+        />
+        <div>
+          <h2 className="pb-1 text-xl font-semibold">
+            Dr. Dilip Kumar Shaw
+          </h2>
+          <div className="mt-1 space-y-1 text-gray-800">
+            <p>Phone(HOD Office) : NA</p>
+            <p>Email : hod.cse@nitjsr.ac.in</p>
+            <p>Fax : NA</p>
+          </div>
+        </div>
       </div>
     </div>
   );

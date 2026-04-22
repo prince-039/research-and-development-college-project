@@ -30,7 +30,7 @@ const ResearcherDetails = () => {
     },[])
 
     if(!scholar || loading)
-        return <div className='items-center text-xl mt-10'>Loadnig...</div>
+        return <div className='text-center text-xl mt-14'>Loadnig...</div>
 
     return (
         <div className="min-h-screen bg-gray-100 mb-8">
@@ -52,7 +52,7 @@ const ResearcherDetails = () => {
             <div className="max-w-5xl mx-auto my-4 bg-white shadow p-6">
                 <div className="flex flex-col md:flex-row gap-6 bg-orange-300 p-6 rounded">
                     <img
-                        src={scholar.profile ? `http://localhost:8080/media/${scholar.profile}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${scholar.firstName}`}
+                        src={scholar.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${scholar.profile}` : "../user.png"}
                         alt={scholar.firstName}
                         className="w-40 h-40 object-cover rounded"
                     />

@@ -33,6 +33,7 @@ const Student = () => {
     firstName: "",
     middleName: "",
     lastName: "",
+    enrollmentNo: "",
     phone: "",
     semester: "",
     branchId: "",
@@ -226,6 +227,7 @@ const Student = () => {
       firstName: student.firstName || "",
       middleName: student.middleName || "",
       lastName: student.lastName || "",
+      enrollmentNo: student.enrollmentNo || "",
       phone: student.phone || "",
       semester: student.semester || "",
       branchId: student.branchId?._id || "",
@@ -282,6 +284,7 @@ const Student = () => {
       firstName: "",
       middleName: "",
       lastName: "",
+      enrollmentNo: "",
       phone: "",
       semester: "",
       branchId: "",
@@ -492,13 +495,9 @@ const Student = () => {
                       <tr key={student._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 border-b">
                           <img
-                            src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                            src={student.profile ? `${process.env.REACT_APP_MEDIA_LINK}/${student.profile}` : "/user.png"}
                             alt={`${student.firstName}'s profile`}
-                            className="w-12 h-12 object-cover rounded-full"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://images.unsplash.com/photo-1744315900478-fa44dc6a4e89?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-                            }}
+                            className="w-12 h-12 object-cover rounded-full"    
                           />
                         </td>
                         <td className="px-6 py-4 border-b">
@@ -613,6 +612,21 @@ const Student = () => {
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
+                </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Enrollment Number
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.enrollmentNo}
+                      onChange={(e) =>
+                        handleFormInputChange("enrollmentNo", e.target.value)
+                      }
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                 </div>
 
                 <div>

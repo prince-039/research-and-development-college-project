@@ -9,6 +9,7 @@ import axiosWrapper from "../../utils/AxiosWrapper";
 import ScholarsInfo from "../ScholarsInfo";
 import ScholarsPublications from "../ScholarsPublications";
 import ScholarsSemesters from "../ScholarsSemesters";
+import UpdatePasswordLoggedIn from "../../components/UpdatePasswordLoggedIn";
 
 const previewNavTabs = [
   { key: "home", label: "Home" },
@@ -77,6 +78,7 @@ const ResearchDetail = ({id}) => {
   const [scholarForm, setScholarForm] = useState(initialScholarForm);
   const [srcCommitteeForm, setSrcCommitteeForm] = useState([createSrcCommitteeEntry()]);
   const [refresh, setRefresh] = useState("");
+  const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
 
   const researcherId = new URLSearchParams(location.search).get("id") || id;
 
@@ -364,10 +366,23 @@ const ResearchDetail = ({id}) => {
       </div>}
 
       <div className="mt-4 w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
-        <div className="bg-white py-5 text-center border-b">
+        <div className="relative bg-white py-5 text-center border-b">
           <h2 className="text-4xl font-bold tracking-wide text-blue-700">
             {researcher.firstName +" "+researcher.lastName}
           </h2>
+          <div className="absolute top-6 right-10 flex items-center gap-8 justify-end ">
+            <CustomButton
+              onClick={() => setShowPasswordUpdate(!showPasswordUpdate)}
+              variant="primary"
+            >
+              {showPasswordUpdate ? "Hide" : "Update Password"}
+            </CustomButton>
+          </div>
+            {showPasswordUpdate && (
+              <UpdatePasswordLoggedIn
+                onClose={() => setShowPasswordUpdate(false)}
+              />
+            )}
         </div>
 
         <div className="bg-blue-600 px-4 py-3 text-white">
