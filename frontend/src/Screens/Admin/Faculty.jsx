@@ -17,23 +17,12 @@ const Faculty = () => {
     phone: "",
     profile: "",
     address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    country: "",
     gender: "",
     dob: "",
     designation: "",
     joiningDate: "",
-    salary: "",
     status: "active",
-    emergencyContact: {
-      name: "",
-      relationship: "",
-      phone: "",
-    },
     bloodGroup: "",
-    branchId: "",
   });
 
   const [branch, setBranches] = useState([]);
@@ -112,16 +101,7 @@ const Faculty = () => {
 
       const formData = new FormData();
       for (const key in data) {
-        if (key === "emergencyContact") {
-          for (const subKey in data.emergencyContact) {
-            formData.append(
-              `emergencyContact[${subKey}]`,
-              data.emergencyContact[subKey]
-            );
-          }
-        } else {
-          formData.append(key, data[key]);
-        }
+        formData.append(key, data[key]);
       }
 
       if (file) {
@@ -177,23 +157,12 @@ const Faculty = () => {
       phone: faculty.phone || "",
       profile: faculty.profile || "",
       address: faculty.address || "",
-      city: faculty.city || "",
-      state: faculty.state || "",
-      pincode: faculty.pincode || "",
-      country: faculty.country || "",
       gender: faculty.gender || "",
       dob: faculty.dob?.split("T")[0] || "",
       designation: faculty.designation || "",
       joiningDate: faculty.joiningDate?.split("T")[0] || "",
-      salary: faculty.salary || "",
       status: faculty.status || "active",
-      emergencyContact: {
-        name: faculty.emergencyContact?.name || "",
-        relationship: faculty.emergencyContact?.relationship || "",
-        phone: faculty.emergencyContact?.phone || "",
-      },
       bloodGroup: faculty.bloodGroup || "",
-      branchId: faculty.branchId || "",
     });
     setSelectedFacultyId(faculty._id);
     setIsEditing(true);
@@ -269,7 +238,7 @@ const Faculty = () => {
     });
   };
 
-  const handleBulkUpload = async (csvFile) => {
+  const handleBulkUpload = async (type, csvFile) => {
     try {
       toast.loading("Uploading faculty...");
       const payload = new FormData();
@@ -457,7 +426,6 @@ const Faculty = () => {
                     value={data.dob}
                     onChange={(e) => handleInputChange("dob", e.target.value)}
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   />
                 </div>
 
@@ -471,7 +439,6 @@ const Faculty = () => {
                       handleInputChange("bloodGroup", e.target.value)
                     }
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   >
                     <option value="">Select Blood Group</option>
                     <option value="A+">A+</option>
@@ -511,49 +478,12 @@ const Faculty = () => {
                       handleInputChange("joiningDate", e.target.value)
                     }
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Salary
-                  </label>
-                  <input
-                    type="number"
-                    value={data.salary}
-                    onChange={(e) =>
-                      handleInputChange("salary", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch
-                  </label>
-                  <select
-                    value={data.branchId}
-                    onChange={(e) =>
-                      handleInputChange("branchId", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">Select Branch</option>
-                    {branch.map((item) => (
-                      <option key={item._id} value={item._id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
+                    Cabin/office Address
                   </label>
                   <input
                     type="text"
@@ -562,119 +492,7 @@ const Faculty = () => {
                       handleInputChange("address", e.target.value)
                     }
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={data.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={data.state}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pincode
-                  </label>
-                  <input
-                    type="text"
-                    value={data.pincode}
-                    onChange={(e) =>
-                      handleInputChange("pincode", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={data.country}
-                    onChange={(e) =>
-                      handleInputChange("country", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Emergency Contact
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        value={data.emergencyContact.name}
-                        onChange={(e) =>
-                          handleEmergencyContactChange("name", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Relationship
-                      </label>
-                      <input
-                        type="text"
-                        value={data.emergencyContact.relationship}
-                        onChange={(e) =>
-                          handleEmergencyContactChange(
-                            "relationship",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        value={data.emergencyContact.phone}
-                        onChange={(e) =>
-                          handleEmergencyContactChange("phone", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -712,9 +530,6 @@ const Faculty = () => {
                 <th className="py-4 px-6 text-left font-semibold">Email</th>
                 <th className="py-4 px-6 text-left font-semibold">Phone</th>
                 <th className="py-4 px-6 text-left font-semibold">
-                  Employee ID
-                </th>
-                <th className="py-4 px-6 text-left font-semibold">
                   Designation
                 </th>
                 <th className="py-4 px-6 text-center font-semibold">Actions</th>
@@ -726,8 +541,7 @@ const Faculty = () => {
                   <tr key={index} className="border-b hover:bg-blue-50">
                     <td className="py-4 px-6">{`${item.firstName} ${item.lastName}`}</td>
                     <td className="py-4 px-6">{item.email}</td>
-                    <td className="py-4 px-6">{item.phone}</td>
-                    <td className="py-4 px-6">{item.employeeId}</td>
+                    <td className="py-4 px-6">{item.phone || "-"}</td>
                     <td className="py-4 px-6">{item.designation}</td>
                     <td className="py-4 px-6 text-center flex justify-center gap-4">
                       <CustomButton
@@ -778,18 +592,9 @@ const Faculty = () => {
           "dob",
           "designation",
           "joiningDate",
-          "salary",
           "branch",
           "address",
-          "city",
-          "state",
-          "pincode",
-          "country",
           "bloodGroup",
-          "status",
-          "emergencyContactName",
-          "emergencyContactRelationship",
-          "emergencyContactPhone",
         ]}
         onUpload={handleBulkUpload}
       />

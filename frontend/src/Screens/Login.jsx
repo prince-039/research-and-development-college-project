@@ -57,15 +57,6 @@ const LoginForm = ({ selected, onSubmit, formData, setFormData }) => (
         Forgot Password?
       </Link>
     </div>
-    <div className="mb-6 text-sm text-gray-600">
-      Need a {selected.toLowerCase()} account?{" "}
-      <Link
-        className="font-medium text-blue-600 hover:underline"
-        to={`/signup?type=${selected.toLowerCase()}`}
-      >
-        Sign up
-      </Link>
-    </div>
     <CustomButton
       type="submit"
       className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3367e8] px-4 py-3.5 text-lg font-semibold text-white shadow-[0_6px_18px_rgba(51,103,232,0.28)] transition duration-200 hover:bg-[#2c5ddb]"

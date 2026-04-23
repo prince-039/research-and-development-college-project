@@ -310,7 +310,7 @@ const Student = () => {
     setFile(null);
   };
 
-  const handleBulkUpload = async (csvFile) => {
+  const handleBulkUpload = async (type, csvFile) => {
     try {
       toast.loading("Uploading students...");
       const payload = new FormData();
